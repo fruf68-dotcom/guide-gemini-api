@@ -6,10 +6,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Guide d'Installation Gemini API</title>
     <script src="https://cdn.tailwindcss.com"></script>
-	<!-- Avant la fermeture de </body> -->
 	<script src="scripts/config.js"></script>
 	<script src="scripts/app.js"></script>
-	<!-- Vos autres scripts... -->
+	<!-- Firebase SDK -->
+	<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+
+	<script>
+	  // Tes clés Firebase
+	  const firebaseConfig = {
+		apiKey: "AIzaSyD4s4c0SITIPAitWJrUaCl9JhAHpqzOkSU",
+		authDomain: "ai-studio-chat-9068c.firebaseapp.com",
+		projectId: "ai-studio-chat-9068c",
+		storageBucket: "ai-studio-chat-9068c.firebasestorage.app",
+		messagingSenderId: "920017576337",
+		appId: "1:920017576337:web:1e54116fa99b4a464e7a30"
+	  };
+
+	  // Initialiser Firebase
+	  const app = firebase.initializeApp(firebaseConfig);
+	  const db = firebase.firestore();
+	  const auth = firebase.auth();
+	</script>
     <script>
       tailwind.config = {
         theme: {
