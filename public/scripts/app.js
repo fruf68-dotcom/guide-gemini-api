@@ -3,13 +3,14 @@ class AIStudioApp {
         this.chats = [];
         this.currentChatId = null;
         this.userId = this.getUserId();
+        this.apiKey = this.getApiKey(); // clé Gemini
 
         this.initUI();
         this.loadChats();
         this.setupThemeToggle();
+        this.setupSendMessage();
     }
 
-    // ================= UTILITAIRES =================
     getUserId() {
         let userId = localStorage.getItem('userId');
         if (!userId) {
@@ -19,20 +20,23 @@ class AIStudioApp {
         return userId;
     }
 
-    formatDate(date) {
-        return new Date(date).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit', day:'2-digit', month:'short' });
+    getApiKey() {
+        // clé stockée dans config.js ou localStorage
+        if (typeof CONFIG !== 'undefined' && CONFIG.API_KEYS.GEMINI) return CONFIG.API_KEYS.GEMINI;
+        const savedKey = localStorage.getItem('gemini_api_key');
+        if (savedKey) return savedKey;
+        console.warn("Clé Gemini non configurée");
+        return null;
     }
 
-    // ================= CHATS =================
+    formatDate(date) {
+        return new Date(date).toLocaleString('fr-FR', { hour: '2-digit', minute:'2-digit', day:'2-digit', month:'short' });
+    }
+
+    // ===== Chats =====
     async createNewChat() {
         const chatId = 'chat_' + Date.now();
-        const newChat = {
-            id: chatId,
-            title: 'Nouveau chat ' + (this.chats.length + 1),
-            messages: [],
-            createdAt: new Date(),
-            archived: false
-        };
+        const newChat = { id: chatId, title: 'Nouveau chat ' + (this.chats.length + 1), messages: [], createdAt: new Date(), archived: false };
         this.chats.unshift(newChat);
         this.currentChatId = chatId;
         this.renderChatList();
@@ -45,8 +49,7 @@ class AIStudioApp {
         if (!window.db) return;
         try {
             await window.db.collection('users').doc(this.userId)
-                .collection('conversations').doc(chat.id)
-                .set(chat);
+                .collection('conversations').doc(chat.id).set(chat);
         } catch(e) { console.warn(e); }
     }
 
@@ -81,13 +84,51 @@ class AIStudioApp {
         await this.saveChat(chat);
     }
 
-    // ================= MESSAGES =================
     addMessageToChat(text, sender='user') {
         const chat = this.chats.find(c => c.id === this.currentChatId);
         if (!chat) return;
-        chat.messages.push({ text, sender, createdAt: new Date() });
+        const message = { text, sender, createdAt: new Date() };
+        chat.messages.push(message);
         this.renderMessages(chat.messages);
         this.saveChat(chat);
+
+        if(sender==='user') this.getAIResponse(text); // appeler Gemini
+    }
+
+    async getAIResponse(userText) {
+        if(!this.apiKey) {
+            this.addMessageToChat("Erreur : Clé Gemini manquante", 'ai');
+            return;
+        }
+        try {
+            const response = await this.callGeminiAPI(userText);
+            const aiText = response?.contents?.[0]?.parts?.[0]?.text || "Erreur : pas de réponse";
+            this.addMessageToChat(aiText, 'ai');
+        } catch(e) {
+            console.error(e);
+            this.addMessageToChat("Erreur lors de l'appel à l'IA", 'ai');
+        }
+    }
+
+    // ===== Gemini API =====
+    async callGeminiAPI(prompt, model='gemini-pro') {
+        const url = `https://api.gemini.com/v1/models/${model}:generateContent?key=${this.apiKey}`;
+        const res = await fetch(url, {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ contents:[{ parts:[{ text: prompt }] }] })
+        });
+        if(!res.ok) throw new Error("Erreur API Gemini");
+        return await res.json();
+    }
+
+    // ===== UI =====
+    openChat(chatId) {
+        const chat = this.chats.find(c => c.id === chatId);
+        if (!chat) return;
+        this.currentChatId = chatId;
+        document.getElementById('chat-header').textContent = chat.title;
+        this.renderMessages(chat.messages);
     }
 
     renderMessages(messages) {
@@ -100,29 +141,6 @@ class AIStudioApp {
             container.appendChild(div);
         });
         container.scrollTop = container.scrollHeight;
-    }
-
-    openChat(chatId) {
-        const chat = this.chats.find(c => c.id === chatId);
-        if (!chat) return;
-        this.currentChatId = chatId;
-        document.getElementById('chat-header').textContent = chat.title;
-        this.renderMessages(chat.messages);
-    }
-
-    // ================= UI =================
-    initUI() {
-        // Bouton envoyer
-        document.getElementById('send-btn').addEventListener('click', ()=>{
-            const input = document.getElementById('message-text');
-            if(input.value.trim()==='') return;
-            this.addMessageToChat(input.value.trim());
-            input.value='';
-        });
-
-        // Liste chats
-        this.renderChatList();
-        this.renderArchivedList();
     }
 
     renderChatList() {
@@ -158,28 +176,14 @@ class AIStudioApp {
         });
     }
 
-    // ================= CHARGEMENT =================
     async loadChats() {
         const saved = localStorage.getItem('chats');
         if(saved) this.chats = JSON.parse(saved);
         this.renderChatList();
         this.renderArchivedList();
         if(this.chats.length) this.openChat(this.chats[0].id);
-
-        if(!window.db) return;
-        try {
-            const snapshot = await window.db.collection('users').doc(this.userId)
-                .collection('conversations').get();
-            snapshot.docs.forEach(doc=>{
-                const c = doc.data();
-                if(!this.chats.find(x=>x.id===c.id)) this.chats.push(c);
-            });
-            this.renderChatList();
-            this.renderArchivedList();
-        } catch(e){console.warn(e);}
     }
 
-    // ================= TABS =================
     showTab(tab) {
         ['chat','image','video'].forEach(t=>{
             const el = document.getElementById('tab-'+t);
@@ -190,7 +194,6 @@ class AIStudioApp {
         });
     }
 
-    // ================= THEME =================
     setupThemeToggle() {
         const btn = document.getElementById('theme-toggle');
         btn.addEventListener('click',()=>{
@@ -198,9 +201,25 @@ class AIStudioApp {
             document.body.classList.toggle('theme-light');
         });
     }
+
+    setupSendMessage() {
+        const input = document.getElementById('message-text');
+        const btn = document.getElementById('send-btn');
+        btn.addEventListener('click',()=>{
+            if(input.value.trim()!=='') {
+                this.addMessageToChat(input.value.trim());
+                input.value = '';
+            }
+        });
+        input.addEventListener('keypress',(e)=>{
+            if(e.key==='Enter' && input.value.trim()!=='') {
+                this.addMessageToChat(input.value.trim());
+                input.value = '';
+            }
+        });
+    }
 }
 
-// --- Initialisation ---
 document.addEventListener('DOMContentLoaded', () => {
     window.app = new AIStudioApp();
 });

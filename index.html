@@ -1,106 +1,44 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Mon assistant IA personnel</title>
-
-<!-- Tailwind CSS -->
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="index.css">
-
-<style>
-/* Thèmes et styles de base */
-.theme-dark { background-color:#121212; color:#E0E0E0; }
-.theme-light { background-color:#f4f4f4; color:#222; }
-
-.sidebar { background-color:#1e1e1e; min-height:100vh; overflow-y:auto; }
-.main-content { background-color:#121212; display:flex; flex-direction:column; }
-
-.message-bubble { padding:0.75rem; border-radius:1.5rem; max-width:70%; word-break:break-word; transition:0.3s; }
-.message-user { background-color:#4A90E2; color:white; margin-left:auto; }
-.message-ai { background-color:#333; color:white; margin-right:auto; }
-
-.chat-item, .archived-chat { padding:0.75rem; border-radius:0.75rem; display:flex; justify-content:space-between; align-items:center; cursor:pointer; transition:0.2s; }
-.chat-item:hover, .archived-chat:hover { background-color:gray; color:white; }
-.chat-menu { display:none; gap:0.25rem; }
-.chat-item:hover .chat-menu { display:flex; }
-.chat-menu button { font-size:0.75rem; background:gray; width:1.5rem; height:1.5rem; border-radius:50%; display:flex; align-items:center; justify-content:center; }
-
-.tab-content { display:flex; flex-direction:column; height:100%; }
-.tab-content.hidden { display:none; }
-.tab-btn { transition:0.2s; }
-.tab-btn.active { background-color:#8A2BE2; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon assistant IA personnel</title>
+    <link rel="stylesheet" href="/index.css">
 </head>
+<body class="theme-dark">
 
-<body class="theme-dark h-screen text-brand-text-primary">
+    <div class="app-container flex h-screen">
 
-<div class="flex h-screen">
-  <!-- Sidebar -->
-  <div class="sidebar w-64 p-4 flex flex-col border-r border-gray-700">
-    <button class="new-chat-btn w-full bg-brand-primary text-white p-3 rounded-lg mb-4 hover:bg-purple-700 transition"
-            onclick="app.createNewChat()">
-      + Nouveau Chat
-    </button>
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <button class="new-chat-btn" onclick="app.createNewChat()">+ Nouveau Chat</button>
+            <div id="chat-list"></div>
+            <h3>Archives</h3>
+            <div id="archived-list"></div>
+        </div>
 
-    <div id="chat-list" class="flex-1 overflow-auto space-y-2"></div>
-
-    <div id="archived-section" class="mt-4">
-      <div class="text-gray-400 font-semibold mb-1">Chats archivés</div>
-      <div id="archived-list" class="space-y-2"></div>
-    </div>
-  </div>
-
-  <!-- Contenu principal -->
-  <div class="main-content flex-1 flex flex-col p-4">
-    <!-- Onglets -->
-    <div class="flex space-x-4 mb-4">
-      <button onclick="app.showTab('chat')" class="tab-btn bg-brand-secondary text-white px-3 py-1 rounded">Chat</button>
-      <button onclick="app.showTab('image')" class="tab-btn bg-gray-600 text-white px-3 py-1 rounded">Image</button>
-      <button onclick="app.showTab('video')" class="tab-btn bg-gray-600 text-white px-3 py-1 rounded">Vidéo</button>
-      <button id="theme-toggle" class="ml-auto bg-gray-600 text-white px-2 py-1 rounded">🌞 / 🌙</button>
-    </div>
-
-    <!-- Chat Tab -->
-    <div id="tab-chat" class="tab-content flex-1 flex flex-col">
-      <div id="chat-header" class="font-bold text-lg mb-2">Sélectionnez un chat</div>
-      <div id="messages-container" class="flex-1 overflow-auto p-4 rounded-lg space-y-2 bg-gray-800"></div>
-      <div id="chat-input" class="flex space-x-2 mt-2">
-        <input type="text" id="message-text" placeholder="Écrire un message..." class="flex-1 p-2 rounded bg-gray-700 text-white"/>
-        <button id="send-btn" class="bg-brand-primary p-2 rounded text-white">Envoyer</button>
-      </div>
+        <!-- Main content -->
+        <div class="main-content">
+            <div id="chat-header">Chat actif</div>
+            <div class="tab-content" id="tab-chat">
+                <div id="messages-container"></div>
+                <div id="chat-input">
+                    <input type="text" id="message-text" placeholder="Écrire un message...">
+                    <button id="send-btn">Envoyer</button>
+                </div>
+            </div>
+            <div class="tab-content hidden" id="tab-image">Onglet Image</div>
+            <div class="tab-content hidden" id="tab-video">Onglet Vidéo</div>
+            <div>
+                <button class="tab-btn" onclick="app.showTab('chat')">Chat</button>
+                <button class="tab-btn" onclick="app.showTab('image')">Image</button>
+                <button class="tab-btn" onclick="app.showTab('video')">Vidéo</button>
+                <button id="theme-toggle">Thème</button>
+            </div>
+        </div>
     </div>
 
-    <!-- Image Tab -->
-    <div id="tab-image" class="tab-content hidden flex-1 justify-center items-center text-gray-400">
-      Générateur d'images ici
-    </div>
-
-    <!-- Video Tab -->
-    <div id="tab-video" class="tab-content hidden flex-1 justify-center items-center text-gray-400">
-      Générateur de vidéos ici
-    </div>
-  </div>
-</div>
-
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
-
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyD4s4c0SITIPAitWJrUaCl9JhAHpqzOkSU",
-  authDomain: "ai-studio-chat-9068c.firebaseapp.com",
-  projectId: "ai-studio-chat-9068c",
-  storageBucket: "ai-studio-chat-9068c.firebasestorage.app",
-  messagingSenderId: "920017576337",
-  appId: "1:920017576337:web:1e54116fa99b4a464e7a30"
-};
-firebase.initializeApp(firebaseConfig);
-window.db = firebase.firestore();
-</script>
-
-<script src="scripts/app.js"></script>
+    <script src="scripts/app.js"></script>
 </body>
 </html>
