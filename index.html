@@ -3,122 +3,88 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Studio - Créateur Multimédia</title>
+    <title>Mon assistant IA personnel</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .sidebar {
-            min-height: 100vh;
-            overflow-y: auto;
-        }
-        .chat-item {
-            transition: background-color 0.2s;
-        }
-        .chat-item:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        .main-content {
-            background-color: #121212;
-        }
-    </style>
-</head>
-<body class="bg-gray-900 text-white">
-    <!-- Structure principale avec sidebar -->
-    <div class="app-container flex h-screen">
-        <!-- Sidebar Historique -->
-        <div class="sidebar w-64 bg-gray-800 p-4 border-r border-gray-700">
-            <button id="new-chat-btn" class="new-chat-btn w-full bg-purple-600 text-white p-3 rounded-lg mb-4 hover:bg-purple-700 transition">
-                + Nouveau Chat
-            </button>
-            <div id="chat-list" class="chat-list">
-                <!-- Liste des chats apparaît ici dynamiquement -->
-            </div>
-        </div>
-        
-        <!-- Contenu principal -->
-        <div class="main-content flex-1 overflow-auto p-8">
-            <div class="hero text-center mb-12">
-                <h1 class="text-4xl font-bold text-purple-400 mb-4">AI Studio</h1>
-                <p class="text-gray-300 text-lg mb-8">Créez des images, vidéos et discutez avec l'IA</p>
-                <button id="start-creating" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition">
-                    Commencer à créer
-                </button>
-            </div>
-
-            <div class="tools-grid grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-                <div class="tool-card bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition cursor-pointer" data-tool="image">
-                    <div class="tool-icon text-3xl mb-4">🖼️</div>
-                    <h3 class="text-xl font-semibold mb-2">Générer des images</h3>
-                    <p class="text-gray-400">Créez des images uniques avec l'IA</p>
-                </div>
-                
-                <div class="tool-card bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition cursor-pointer" data-tool="video">
-                    <div class="tool-icon text-3xl mb-4">🎬</div>
-                    <h3 class="text-xl font-semibold mb-2">Créer des vidéos</h3>
-                    <p class="text-gray-400">Transformez vos images en vidéos animées</p>
-                </div>
-                
-                <div class="tool-card bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition cursor-pointer" data-tool="chat">
-                    <div class="tool-icon text-3xl mb-4">💬</div>
-                    <h3 class="text-xl font-semibold mb-2">Chat IA</h3>
-                    <p class="text-gray-400">Discutez avec notre intelligence artificielle</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Firebase SDK -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'brand-bg': '#121212',
+              'brand-surface': '#1e1e1e',
+              'brand-primary': '#8A2BE2',
+              'brand-secondary': '#4A90E2',
+              'brand-text-primary': '#E0E0E0',
+              'brand-text-secondary': '#B0B0B0',
+            },
+          },
+        },
+      }
+    </script>
+	<!-- FIREBASE D'ABORD -->
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-
+    
     <script>
-        // Configuration Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyD4s4c0SITIPAitWJrUaCl9JhAHpqzOkSU",
-            authDomain: "ai-studio-chat-9068c.firebaseapp.com",
-            projectId: "ai-studio-chat-9068c",
-            storageBucket: "ai-studio-chat-9068c.firebasestorage.app",
-            messagingSenderId: "920017576337",
-            appId: "1:920017576337:web:1e54116fa99b4a464e7a30"
-        };
+      // Tes clés Firebase
+      const firebaseConfig = {
+        apiKey: "AIzaSyD4s4c0SITIPAitWJrUaCl9JhAHpqzOkSU",
+        authDomain: "ai-studio-chat-9068c.firebaseapp.com",
+        projectId: "ai-studio-chat-9068c",
+        storageBucket: "ai-studio-chat-9068c.firebasestorage.app",
+        messagingSenderId: "920017576337",
+        appId: "1:920017576337:web:1e54116fa99b4a464e7a30"
+      };
 
-        // Initialiser Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        window.db = firebase.firestore();
-        window.auth = firebase.auth();
-        console.log("✅ Firebase initialisé !");
+      // Initialiser Firebase
+      const firebaseAppInstance = firebase.initializeApp(firebaseConfig); // Renommé pour éviter la confusion avec window.app
+      window.db = firebase.firestore(); // Rendre globalement accessible
+      window.auth = firebase.auth();   // Rendre globalement accessible
+      console.log("Firebase initialisé !");
     </script>
-
-    <!-- Scripts personnalisés -->
-    <script src="./scripts/config.js"></script>
-	<script src="./scripts/app.js"></script>
-
-    <script>
-        // Initialisation finale et gestion des erreurs
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log("🚀 DOM chargé - Initialisation de l'application...");
-            
-            try {
-                if (typeof AIStudioApp === 'undefined') {
-                    throw new Error("AIStudioApp n'est pas défini");
-                }
-                
-                window.app = new AIStudioApp();
-                console.log("✅ Application initialisée avec succès");
-                
-                // Vérification que tout fonctionne
-                setTimeout(() => {
-                    console.log("🔍 Vérification finale:");
-                    console.log("- Firebase db:", typeof window.db);
-                    console.log("- Firebase auth:", typeof window.auth);
-                    console.log("- Application app:", typeof window.app);
-                    console.log("- Méthode createNewChat:", window.app.createNewChat ? "✅ Existe" : "❌ Manquante");
-                }, 1000);
-                
-            } catch (error) {
-                console.error("❌ Erreur lors de l'initialisation:", error);
-            }
-        });
-    </script>
+    
+    <!-- ENSUITE TES SCRIPTS, y compris config.js et app.js -->
+    <script src="scripts/config.js"></script>
+    <script src="scripts/app.js"></script>
+    <script type="module" src="/index.tsx"></script>
+    <link rel="stylesheet" href="/index.css">
+    <!-- ... (le reste de votre head) ... -->
+	
+	<style>
+	.sidebar {
+		min-height: 100vh;
+		overflow-y: auto;
+	}
+	.chat-item {
+		transition: background-color 0.2s;
+	}
+	.chat-item:hover {
+		background-color: rgba(255, 255, 255, 0.1);
+	}
+	.main-content {
+		background-color: #121212;
+	}
+	</style>
+</head>
+<body class="bg-brand-bg text-brand-text-primary">
+    <!-- NOUVELLE STRUCTURE AVEC SIDEBAR -->
+    <div class="app-container flex h-screen">
+        <!-- Sidebar Historique -->
+        <div class="sidebar w-64 bg-gray-900 p-4 border-r border-gray-700" id="chat-sidebar">
+            <button class="new-chat-btn w-full bg-brand-primary text-white p-3 rounded-lg mb-4 hover:bg-purple-700 transition" 
+                    onclick="app.createNewChat()">
+                + Nouveau Chat
+            </button>
+            <!-- Liste des chats apparaît ici dynamiquement -->
+        </div>
+        
+        <!-- Contenu principal existant -->
+        <div class="main-content flex-1 overflow-auto">
+            <div id="root">
+                <!-- TON CONTENU EXISTANT RESTE ICI -->
+            </div>
+        </div>
+    </div>
 </body>
 </html>
