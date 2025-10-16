@@ -158,6 +158,7 @@ class AIStudioApp {
       .join('');
   }
 }
+
 // Initialisation
 document.addEventListener('DOMContentLoaded', () => {
   window.app = new AIStudioApp();
