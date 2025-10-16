@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mon assistant IA personnel</title>
+
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -21,13 +23,14 @@
         },
       }
     </script>
-	<!-- FIREBASE D'ABORD -->
+
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
     
     <script>
-      // Tes clés Firebase
+      // Configuration Firebase
       const firebaseConfig = {
         apiKey: "AIzaSyD4s4c0SITIPAitWJrUaCl9JhAHpqzOkSU",
         authDomain: "ai-studio-chat-9068c.firebaseapp.com",
@@ -37,54 +40,43 @@
         appId: "1:920017576337:web:1e54116fa99b4a464e7a30"
       };
 
-      // Initialiser Firebase
-      const firebaseAppInstance = firebase.initializeApp(firebaseConfig); // Renommé pour éviter la confusion avec window.app
-      window.db = firebase.firestore(); // Rendre globalement accessible
-      window.auth = firebase.auth();   // Rendre globalement accessible
-      console.log("Firebase initialisé !");
+      // Initialisation Firebase
+      const firebaseAppInstance = firebase.initializeApp(firebaseConfig);
+      window.db = firebase.firestore();
+      window.auth = firebase.auth();
+      console.log("✅ Firebase initialisé !");
     </script>
-    
-    <!-- ENSUITE TES SCRIPTS, y compris config.js et app.js -->
-    <script src="scripts/config.js"></script>
-    <script src="scripts/app.js"></script>
-    <script type="module" src="/index.tsx"></script>
+
     <link rel="stylesheet" href="/index.css">
-    <!-- ... (le reste de votre head) ... -->
-	
-	<style>
-	.sidebar {
-		min-height: 100vh;
-		overflow-y: auto;
-	}
-	.chat-item {
-		transition: background-color 0.2s;
-	}
-	.chat-item:hover {
-		background-color: rgba(255, 255, 255, 0.1);
-	}
-	.main-content {
-		background-color: #121212;
-	}
-	</style>
+
+    <style>
+      .sidebar { min-height: 100vh; overflow-y: auto; }
+      .chat-item { transition: background-color 0.2s; }
+      .chat-item:hover { background-color: rgba(255, 255, 255, 0.1); }
+      .main-content { background-color: #121212; }
+    </style>
 </head>
+
 <body class="bg-brand-bg text-brand-text-primary">
-    <!-- NOUVELLE STRUCTURE AVEC SIDEBAR -->
-    <div class="app-container flex h-screen">
-        <!-- Sidebar Historique -->
-        <div class="sidebar w-64 bg-gray-900 p-4 border-r border-gray-700" id="chat-sidebar">
-            <button class="new-chat-btn w-full bg-brand-primary text-white p-3 rounded-lg mb-4 hover:bg-purple-700 transition" 
-                    onclick="app.createNewChat()">
-                + Nouveau Chat
-            </button>
-            <!-- Liste des chats apparaît ici dynamiquement -->
-        </div>
-        
-        <!-- Contenu principal existant -->
-        <div class="main-content flex-1 overflow-auto">
-            <div id="root">
-                <!-- TON CONTENU EXISTANT RESTE ICI -->
-            </div>
-        </div>
+  <div class="app-container flex h-screen">
+    <!-- Sidebar Historique -->
+    <div class="sidebar w-64 bg-gray-900 p-4 border-r border-gray-700" id="chat-sidebar">
+      <button id="new-chat-btn"
+              class="w-full bg-brand-primary text-white p-3 rounded-lg mb-4 hover:bg-purple-700 transition">
+        + Nouveau Chat
+      </button>
+      <!-- Liste des chats -->
+      <div id="chat-list"></div>
     </div>
+
+    <!-- Contenu principal -->
+    <div class="main-content flex-1 overflow-auto">
+      <div id="root"></div>
+    </div>
+  </div>
+
+  <!-- Scripts placés à la fin pour éviter les erreurs de chargement -->
+  <script src="scripts/config.js"></script>
+  <script src="scripts/app.js"></script>
 </body>
 </html>
