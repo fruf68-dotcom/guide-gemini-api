@@ -8,16 +8,12 @@ class AIStudioApp {
     }
 
     setupEventListeners() {
-        document.getElementById('send-btn')?.addEventListener('click', () => {
-            this.sendMessage();
-        });
-
+        document.getElementById('send-btn')?.addEventListener('click', () => this.sendMessage());
         document.getElementById('message-text')?.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') this.sendMessage();
         });
     }
 
-    // === Gestion des chats ===
     initChatSystem() {
         this.loadChatHistory();
     }
@@ -51,10 +47,10 @@ class AIStudioApp {
 
         this.chats.forEach(chat => {
             const div = document.createElement('div');
-            div.className = 'chat-item p-2 mb-2 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-800';
+            div.className = 'chat-item group';
             div.innerHTML = `
                 <span>${chat.title}</span>
-                <div class="chat-menu space-x-1 hidden group-hover:flex">
+                <div class="chat-menu">
                     <button onclick="app.archiveChat('${chat.id}')">📥</button>
                     <button onclick="app.deleteChat('${chat.id}')">🗑️</button>
                 </div>
@@ -70,7 +66,7 @@ class AIStudioApp {
         container.innerHTML = '';
         messages.forEach(msg => {
             const div = document.createElement('div');
-            div.className = 'p-2 mb-2 rounded bg-gray-700';
+            div.className = 'message-bubble';
             div.textContent = msg.text;
             container.appendChild(div);
         });
@@ -100,12 +96,13 @@ class AIStudioApp {
         if (this.currentChatId === chatId) this.currentChatId = this.chats[0]?.id || null;
         this.renderChatList();
         if (this.currentChatId) this.openChat(this.currentChatId);
-        else document.getElementById('chat-header').textContent = 'Sélectionnez un chat';
-        document.getElementById('messages-container').innerHTML = '';
+        else {
+            document.getElementById('chat-header').textContent = 'Sélectionnez un chat';
+            document.getElementById('messages-container').innerHTML = '';
+        }
     }
 
     loadChatHistory() {
-        // Exemple : charger depuis localStorage
         const saved = localStorage.getItem('myChats');
         if (saved) this.chats = JSON.parse(saved);
         if (this.chats.length) this.openChat(this.chats[0].id);

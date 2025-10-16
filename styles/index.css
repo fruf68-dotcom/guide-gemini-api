@@ -2,17 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Couleurs personnalisées */
-:root {
-  --brand-bg: #121212;
-  --brand-surface: #1e1e1e;
-  --brand-primary: #8A2BE2;
-  --brand-secondary: #4A90E2;
-  --brand-text-primary: #E0E0E0;
-  --brand-text-secondary: #B0B0B0;
+/* Styles personnalisés pour les bulles messages et sidebar */
+.chat-item {
+  @apply p-2 rounded-lg flex justify-between items-center cursor-pointer transition;
 }
-
-body {
-  background-color: var(--brand-bg);
-  color: var(--brand-text-primary);
+.chat-item:hover {
+  @apply bg-gray-800;
+}
+.chat-menu {
+  @apply hidden space-x-1;
+}
+.chat-item:hover .chat-menu {
+  @apply flex;
+}
+.message-bubble {
+  @apply p-2 rounded bg-gray-700 text-white;
 }

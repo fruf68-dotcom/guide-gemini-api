@@ -1,51 +1,51 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mon assistant IA personnel</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mon assistant IA personnel</title>
 
-    <!-- Tailwind CSS via CDN pour simplicité -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              'brand-bg': '#121212',
-              'brand-surface': '#1e1e1e',
-              'brand-primary': '#8A2BE2',
-              'brand-secondary': '#4A90E2',
-              'brand-text-primary': '#E0E0E0',
-              'brand-text-secondary': '#B0B0B0',
-            },
+  <!-- Tailwind CSS CDN pour simplicité -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'brand-bg': '#121212',
+            'brand-surface': '#1e1e1e',
+            'brand-primary': '#8A2BE2',
+            'brand-secondary': '#4A90E2',
+            'brand-text-primary': '#E0E0E0',
+            'brand-text-secondary': '#B0B0B0',
           },
         },
-      }
-    </script>
+      },
+    }
+  </script>
 
-    <link rel="stylesheet" href="/index.css">
+  <link rel="stylesheet" href="/index.css">
 </head>
-<body class="bg-brand-bg text-brand-text-primary">
+<body class="bg-brand-bg text-brand-text-primary h-screen">
 
-<div class="app-container flex h-screen">
-    <!-- Sidebar -->
-    <div class="sidebar w-64 bg-gray-900 p-4 border-r border-gray-700 flex flex-col">
-        <button class="new-chat-btn w-full bg-brand-primary text-white p-3 rounded-lg mb-4 hover:bg-purple-700 transition" onclick="app.createNewChat()">
-            + Nouveau Chat
-        </button>
-        <div id="chat-list" class="flex-1 overflow-auto"></div>
-    </div>
+<div class="flex h-screen">
+  <!-- Sidebar -->
+  <div class="sidebar w-64 bg-brand-surface p-4 border-r border-gray-700 flex flex-col">
+    <button class="new-chat-btn w-full bg-brand-primary text-white p-3 rounded-lg mb-4 hover:bg-purple-700 transition" onclick="app.createNewChat()">
+      + Nouveau Chat
+    </button>
+    <div id="chat-list" class="flex-1 overflow-auto space-y-2"></div>
+  </div>
 
-    <!-- Contenu principal -->
-    <div class="main-content flex-1 flex flex-col p-4">
-        <div id="chat-header" class="font-bold text-lg mb-2">Sélectionnez un chat</div>
-        <div id="messages-container" class="flex-1 overflow-auto bg-brand-surface p-4 rounded-lg mb-2"></div>
-        <div id="chat-input" class="flex space-x-2">
-            <input type="text" id="message-text" placeholder="Écrire un message..." class="flex-1 p-2 rounded bg-gray-700 text-white"/>
-            <button id="send-btn" class="bg-brand-primary p-2 rounded text-white">Envoyer</button>
-        </div>
+  <!-- Contenu principal -->
+  <div class="main-content flex-1 flex flex-col p-4">
+    <div id="chat-header" class="font-bold text-lg mb-2">Sélectionnez un chat</div>
+    <div id="messages-container" class="flex-1 overflow-auto bg-brand-surface p-4 rounded-lg mb-2 space-y-2"></div>
+    <div id="chat-input" class="flex space-x-2 mt-2">
+      <input type="text" id="message-text" placeholder="Écrire un message..." class="flex-1 p-2 rounded bg-gray-700 text-white"/>
+      <button id="send-btn" class="bg-brand-primary p-2 rounded text-white">Envoyer</button>
     </div>
+  </div>
 </div>
 
 <script src="scripts/app.js"></script>
