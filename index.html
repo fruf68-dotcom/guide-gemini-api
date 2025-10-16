@@ -5,11 +5,35 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Mon assistant IA personnel</title>
 
-<!-- Tailwind CSS pour test -->
+<!-- Tailwind CSS -->
 <script src="https://cdn.tailwindcss.com"></script>
-
 <link rel="stylesheet" href="index.css">
+
+<style>
+/* Thèmes et styles de base */
+.theme-dark { background-color:#121212; color:#E0E0E0; }
+.theme-light { background-color:#f4f4f4; color:#222; }
+
+.sidebar { background-color:#1e1e1e; min-height:100vh; overflow-y:auto; }
+.main-content { background-color:#121212; display:flex; flex-direction:column; }
+
+.message-bubble { padding:0.75rem; border-radius:1.5rem; max-width:70%; word-break:break-word; transition:0.3s; }
+.message-user { background-color:#4A90E2; color:white; margin-left:auto; }
+.message-ai { background-color:#333; color:white; margin-right:auto; }
+
+.chat-item, .archived-chat { padding:0.75rem; border-radius:0.75rem; display:flex; justify-content:space-between; align-items:center; cursor:pointer; transition:0.2s; }
+.chat-item:hover, .archived-chat:hover { background-color:gray; color:white; }
+.chat-menu { display:none; gap:0.25rem; }
+.chat-item:hover .chat-menu { display:flex; }
+.chat-menu button { font-size:0.75rem; background:gray; width:1.5rem; height:1.5rem; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+
+.tab-content { display:flex; flex-direction:column; height:100%; }
+.tab-content.hidden { display:none; }
+.tab-btn { transition:0.2s; }
+.tab-btn.active { background-color:#8A2BE2; }
+</style>
 </head>
+
 <body class="theme-dark h-screen text-brand-text-primary">
 
 <div class="flex h-screen">
@@ -63,14 +87,15 @@
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+
 <script>
 const firebaseConfig = {
-  apiKey: "VOTRE_API_KEY",
-  authDomain: "VOTRE_PROJECT.firebaseapp.com",
-  projectId: "VOTRE_PROJECT",
-  storageBucket: "VOTRE_PROJECT.appspot.com",
-  messagingSenderId: "VOTRE_SENDER_ID",
-  appId: "VOTRE_APP_ID"
+  apiKey: "AIzaSyD4s4c0SITIPAitWJrUaCl9JhAHpqzOkSU",
+  authDomain: "ai-studio-chat-9068c.firebaseapp.com",
+  projectId: "ai-studio-chat-9068c",
+  storageBucket: "ai-studio-chat-9068c.firebasestorage.app",
+  messagingSenderId: "920017576337",
+  appId: "1:920017576337:web:1e54116fa99b4a464e7a30"
 };
 firebase.initializeApp(firebaseConfig);
 window.db = firebase.firestore();
