@@ -3,77 +3,51 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mon assistant IA personnel</title>    
-    <script type="module" src="/index.tsx"></script>
-	<!-- Tailwind CSS via CDN -->
-	<script src="https://cdn.tailwindcss.com"></script>
-	<script>
-	  tailwind.config = {
-		theme: {
-		  extend: {
-			colors: {
-			  'brand-bg': '#121212',
-			  'brand-surface': '#1e1e1e',
-			  'brand-primary': '#8A2BE2',
-			  'brand-secondary': '#4A90E2',
-			  'brand-text-primary': '#E0E0E0',
-			  'brand-text-secondary': '#B0B0B0',
-			},
-		  },
-		},
-	  }
-	</script>
+    <title>Mon assistant IA personnel</title>
+
+    <!-- Tailwind CSS via CDN pour simplicité -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'brand-bg': '#121212',
+              'brand-surface': '#1e1e1e',
+              'brand-primary': '#8A2BE2',
+              'brand-secondary': '#4A90E2',
+              'brand-text-primary': '#E0E0E0',
+              'brand-text-secondary': '#B0B0B0',
+            },
+          },
+        },
+      }
+    </script>
+
     <link rel="stylesheet" href="/index.css">
-	
-    <style>
-        .sidebar {
-            min-height: 100vh;
-            overflow-y: auto;
-        }
-        .chat-item {
-            transition: background-color 0.2s;
-        }
-        .chat-item:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        .main-content {
-            background-color: #121212;
-        }
-    </style>
 </head>
 <body class="bg-brand-bg text-brand-text-primary">
-    <div class="app-container flex h-screen">
-        <div class="sidebar w-64 bg-gray-900 p-4 border-r border-gray-700" id="chat-sidebar">
-            <button class="new-chat-btn w-full bg-brand-primary text-white p-3 rounded-lg mb-4 hover:bg-purple-700 transition" id="new-chat-btn">
-                + Nouveau Chat
-            </button>
-        </div>
-        <div class="main-content flex-1 overflow-auto">
-            <div id="root">
-                <!-- TON CONTENU EXISTANT RESTE ICI -->
-            </div>
+
+<div class="app-container flex h-screen">
+    <!-- Sidebar -->
+    <div class="sidebar w-64 bg-gray-900 p-4 border-r border-gray-700 flex flex-col">
+        <button class="new-chat-btn w-full bg-brand-primary text-white p-3 rounded-lg mb-4 hover:bg-purple-700 transition" onclick="app.createNewChat()">
+            + Nouveau Chat
+        </button>
+        <div id="chat-list" class="flex-1 overflow-auto"></div>
+    </div>
+
+    <!-- Contenu principal -->
+    <div class="main-content flex-1 flex flex-col p-4">
+        <div id="chat-header" class="font-bold text-lg mb-2">Sélectionnez un chat</div>
+        <div id="messages-container" class="flex-1 overflow-auto bg-brand-surface p-4 rounded-lg mb-2"></div>
+        <div id="chat-input" class="flex space-x-2">
+            <input type="text" id="message-text" placeholder="Écrire un message..." class="flex-1 p-2 rounded bg-gray-700 text-white"/>
+            <button id="send-btn" class="bg-brand-primary p-2 rounded text-white">Envoyer</button>
         </div>
     </div>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-    
-    <script>
-      const firebaseConfig = {
-        apiKey: "AIzaSyD4s4c0SITIPAitWJrUaCl9JhAHpqzOkSU",
-        authDomain: "ai-studio-chat-9068c.firebaseapp.com",
-        projectId: "ai-studio-chat-9068c",
-        storageBucket: "ai-studio-chat-9068c.firebasestorage.app",
-        messagingSenderId: "920017576337",
-        appId: "1:920017576337:web:1e54116fa99b4a464e7a30"
-      };
-      const firebaseAppInstance = firebase.initializeApp(firebaseConfig);
-      window.db = firebase.firestore();
-      window.auth = firebase.auth();
-      console.log("Firebase initialisé !");
-    </script>
-    
-    <script src="scripts/config.js"></script>
-    <script src="scripts/app.js"></script>
+</div>
+
+<script src="scripts/app.js"></script>
 </body>
 </html>
