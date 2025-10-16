@@ -1,0 +1,5 @@
+{
+  "name": "Gemini AI Studio",
+  "description": "Une application web pour générer des images, des vidéos et discuter avec l'IA Gemini.",
+  "requestFramePermissions": []
+}
