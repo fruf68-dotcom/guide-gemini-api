@@ -25,9 +25,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-    <script src="scripts/config.js"></script>
-    <script src="scripts/app.js"></script>
-	
+    
     <script>
       // Tes clés Firebase
       const firebaseConfig = {
@@ -40,14 +38,19 @@
       };
 
       // Initialiser Firebase
-      const app = firebase.initializeApp(firebaseConfig);
-      const db = firebase.firestore();
-      const auth = firebase.auth();
+      const firebaseAppInstance = firebase.initializeApp(firebaseConfig); // Renommé pour éviter la confusion avec window.app
+      window.db = firebase.firestore(); // Rendre globalement accessible
+      window.auth = firebase.auth();   // Rendre globalement accessible
       console.log("Firebase initialisé !");
     </script>
-    <!-- ENSUITE TES SCRIPTS -->    
+    
+    <!-- ENSUITE TES SCRIPTS, y compris config.js et app.js -->
+    <script src="scripts/config.js"></script>
+    <script src="scripts/app.js"></script>
     <script type="module" src="/index.tsx"></script>
     <link rel="stylesheet" href="/index.css">
+    <!-- ... (le reste de votre head) ... -->
+	
 	<style>
 	.sidebar {
 		min-height: 100vh;

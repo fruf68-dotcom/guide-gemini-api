@@ -102,27 +102,33 @@ class AIStudioApp {
         this.loadChatHistory();
     }
 
-    async createNewChat() {
+     async createNewChat() {
 		try {
 			console.log("Tentative de création d'un chat...");
 			
-			// Vérifier que Firebase est prêt
-			if (!db) {
-				console.error("Firebase Firestore n'est pas initialisé");
+			// Vérifier que Firebase est prêt (utiliser window.db)
+			if (!window.db) { // Changé de 'db' à 'window.db'
+				console.error("Firebase Firestore n'est pas initialisé ou accessible globalement.");
 				return;
 			}
+            if (!window.auth || !window.auth.currentUser) { // Vérifier l'authentification
+                alert("Veuillez vous connecter pour créer un nouveau chat.");
+                console.warn("Utilisateur non connecté pour créer un chat.");
+                return;
+            }
 			
 			const chatId = 'chat_' + Date.now();
 			const newChat = {
 				id: chatId,
 				title: 'Nouveau chat ' + (this.chats.length + 1),
 				createdAt: new Date(),
-				messages: []
+				messages: [],
+                userId: window.auth.currentUser.uid // Associer le chat à l'utilisateur connecté
 			};
 			
 			this.chats.unshift(newChat);
 			this.currentChatId = chatId;
-			await this.saveChatToFirestore(newChat);
+			await this.saveChatToFirestore(newChat); // saveChatToFirestore utilisera aussi window.db
 			this.renderChatList();
 			
 			console.log("Nouveau chat créé avec succès:", chatId);
@@ -132,26 +138,31 @@ class AIStudioApp {
 	}
 
     async saveChatToFirestore(chat) {
-        if (!db) {
-            console.warn("Firestore non initialisé");
+        if (!window.db) { // Changé de 'db' à 'window.db'
+            console.warn("Firestore non initialisé ou accessible globalement.");
             return;
         }
         
-        const userId = this.getUserId();
-        await db.collection('users').doc(userId)
+        const userId = this.getUserId(); // Ou directement window.auth.currentUser.uid si toujours connecté
+        await window.db.collection('users').doc(userId) // Changé de 'db' à 'window.db'
             .collection('conversations').doc(chat.id)
             .set(chat);
     }
 
     async loadChatHistory() {
         try {
-            if (!db) {
-                console.warn("Firestore non initialisé");
+            if (!window.db) { // Changé de 'db' à 'window.db'
+                console.warn("Firestore non initialisé ou accessible globalement.");
+                return;
+            }
+            if (!window.auth || !window.auth.currentUser) {
+                console.warn("Utilisateur non connecté. Impossible de charger l'historique.");
+                // Ou gérer l'authentification ici
                 return;
             }
             
-            const userId = this.getUserId();
-            const snapshot = await db.collection('users').doc(userId)
+            const userId = window.auth.currentUser.uid; // Utilisez l'ID de l'utilisateur Firebase
+            const snapshot = await window.db.collection('users').doc(userId) // Changé de 'db' à 'window.db'
                 .collection('conversations')
                 .orderBy('createdAt', 'desc')
                 .get();
@@ -164,39 +175,17 @@ class AIStudioApp {
         }
     }
 
-    renderChatList() {
-        const sidebar = document.getElementById('chat-sidebar');
-        if (!sidebar) {
-            console.warn("Sidebar non trouvée");
-            return;
-        }
-        
-        // Garder le bouton "Nouveau Chat"
-        const newChatBtn = sidebar.querySelector('.new-chat-btn') || 
-            '<button class="new-chat-btn" onclick="app.createNewChat()">+ Nouveau Chat</button>';
-            
-        sidebar.innerHTML = newChatBtn + this.chats.map(chat => `
-            <div class="chat-item p-2 border-b border-gray-700 cursor-pointer hover:bg-gray-800" 
-                 onclick="app.selectChat('${chat.id}')">
-                <div class="chat-title font-medium">${chat.title}</div>
-                <div class="chat-date text-xs text-gray-400">${this.formatDate(chat.createdAt)}</div>
-            </div>
-        `).join('');
-    }
-
-    selectChat(chatId) {
-        this.currentChatId = chatId;
-        const chat = this.chats.find(c => c.id === chatId);
-        if (chat) {
-            this.renderMessages(chat.messages);
-        }
-    }
-
     getUserId() {
-        // Générer un ID unique pour chaque visiteur
+        // Cette fonction doit maintenant retourner l'ID de l'utilisateur Firebase
+        // car vos collections sont sous 'users/{userId}/conversations'.
+        // La méthode localStorage pour un userId générique pourrait entrer en conflit.
+        if (window.auth && window.auth.currentUser) {
+            return window.auth.currentUser.uid;
+        }
+        console.warn("Aucun utilisateur Firebase connecté. Retourne un ID générique pour le test.");
         let userId = localStorage.getItem('userId');
         if (!userId) {
-            userId = 'user_' + Math.random().toString(36).substr(2, 9);
+            userId = 'anon_user_' + Math.random().toString(36).substr(2, 9);
             localStorage.setItem('userId', userId);
         }
         return userId;
