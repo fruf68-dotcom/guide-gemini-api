@@ -1,44 +1,53 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mon assistant IA personnel</title>
+
+    <!-- Tailwind CSS via CDN pour simplicité -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'brand-bg': '#121212',
+              'brand-surface': '#1e1e1e',
+              'brand-primary': '#8A2BE2',
+              'brand-secondary': '#4A90E2',
+              'brand-text-primary': '#E0E0E0',
+              'brand-text-secondary': '#B0B0B0',
+            },
+          },
+        },
+      }
+    </script>
+
     <link rel="stylesheet" href="/index.css">
 </head>
-<body class="theme-dark">
+<body class="bg-brand-bg text-brand-text-primary">
 
-    <div class="app-container flex h-screen">
-
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <button class="new-chat-btn" onclick="app.createNewChat()">+ Nouveau Chat</button>
-            <div id="chat-list"></div>
-            <h3>Archives</h3>
-            <div id="archived-list"></div>
-        </div>
-
-        <!-- Main content -->
-        <div class="main-content">
-            <div id="chat-header">Chat actif</div>
-            <div class="tab-content" id="tab-chat">
-                <div id="messages-container"></div>
-                <div id="chat-input">
-                    <input type="text" id="message-text" placeholder="Écrire un message...">
-                    <button id="send-btn">Envoyer</button>
-                </div>
-            </div>
-            <div class="tab-content hidden" id="tab-image">Onglet Image</div>
-            <div class="tab-content hidden" id="tab-video">Onglet Vidéo</div>
-            <div>
-                <button class="tab-btn" onclick="app.showTab('chat')">Chat</button>
-                <button class="tab-btn" onclick="app.showTab('image')">Image</button>
-                <button class="tab-btn" onclick="app.showTab('video')">Vidéo</button>
-                <button id="theme-toggle">Thème</button>
-            </div>
-        </div>
+<div class="app-container flex h-screen">
+    <!-- Sidebar -->
+    <div class="sidebar w-64 bg-gray-900 p-4 border-r border-gray-700 flex flex-col">
+        <button class="new-chat-btn w-full bg-brand-primary text-white p-3 rounded-lg mb-4 hover:bg-purple-700 transition" onclick="app.createNewChat()">
+            + Nouveau Chat
+        </button>
+        <div id="chat-list" class="flex-1 overflow-auto"></div>
     </div>
 
-    <script src="scripts/app.js"></script>
+    <!-- Contenu principal -->
+    <div class="main-content flex-1 flex flex-col p-4">
+        <div id="chat-header" class="font-bold text-lg mb-2">Sélectionnez un chat</div>
+        <div id="messages-container" class="flex-1 overflow-auto bg-brand-surface p-4 rounded-lg mb-2"></div>
+        <div id="chat-input" class="flex space-x-2">
+            <input type="text" id="message-text" placeholder="Écrire un message..." class="flex-1 p-2 rounded bg-gray-700 text-white"/>
+            <button id="send-btn" class="bg-brand-primary p-2 rounded text-white">Envoyer</button>
+        </div>
+    </div>
+</div>
+
+<script src="scripts/app.js"></script>
 </body>
 </html>
