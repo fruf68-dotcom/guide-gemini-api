@@ -217,5 +217,5 @@ class AIStudioApp {
 
 // Initialisation de l'application
 document.addEventListener('DOMContentLoaded', () => {
-    window.aiStudioApp = new AIStudioApp();
+    window.app = new AIStudioApp();
 });
