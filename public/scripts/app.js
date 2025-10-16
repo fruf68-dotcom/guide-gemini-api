@@ -1,14 +1,14 @@
+// scripts/app.js
 class AIStudioApp {
     constructor() {
         this.chats = [];
         this.currentChatId = null;
         this.userId = this.getUserId();
-        this.apiKey = this.getApiKey(); // clé Gemini
+        this.apiKey = this.getApiKey();
 
-        this.initUI();
-        this.loadChats();
-        this.setupThemeToggle();
-        this.setupSendMessage();
+        this.initChatSystem();
+        this.setupEventListeners();
+        this.checkApiKey();
     }
 
     getUserId() {
@@ -21,7 +21,6 @@ class AIStudioApp {
     }
 
     getApiKey() {
-        // clé stockée dans config.js ou localStorage
         if (typeof CONFIG !== 'undefined' && CONFIG.API_KEYS.GEMINI) return CONFIG.API_KEYS.GEMINI;
         const savedKey = localStorage.getItem('gemini_api_key');
         if (savedKey) return savedKey;
@@ -29,14 +28,31 @@ class AIStudioApp {
         return null;
     }
 
-    formatDate(date) {
-        return new Date(date).toLocaleString('fr-FR', { hour: '2-digit', minute:'2-digit', day:'2-digit', month:'short' });
+    checkApiKey() {
+        if (!this.apiKey) {
+            console.warn("Veuillez configurer votre clé Gemini !");
+        }
     }
 
-    // ===== Chats =====
+    formatDate(date) {
+        return new Date(date).toLocaleString('fr-FR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            day: '2-digit',
+            month: 'short'
+        });
+    }
+
+    // ================== Chats ==================
     async createNewChat() {
         const chatId = 'chat_' + Date.now();
-        const newChat = { id: chatId, title: 'Nouveau chat ' + (this.chats.length + 1), messages: [], createdAt: new Date(), archived: false };
+        const newChat = {
+            id: chatId,
+            title: 'Nouveau chat ' + (this.chats.length + 1),
+            messages: [],
+            createdAt: new Date(),
+            archived: false
+        };
         this.chats.unshift(newChat);
         this.currentChatId = chatId;
         this.renderChatList();
@@ -50,7 +66,7 @@ class AIStudioApp {
         try {
             await window.db.collection('users').doc(this.userId)
                 .collection('conversations').doc(chat.id).set(chat);
-        } catch(e) { console.warn(e); }
+        } catch (e) { console.warn(e); }
     }
 
     async deleteChat(chatId) {
@@ -62,7 +78,7 @@ class AIStudioApp {
         try {
             await window.db.collection('users').doc(this.userId)
                 .collection('conversations').doc(chatId).delete();
-        } catch(e){ console.warn(e);}
+        } catch (e) { console.warn(e); }
     }
 
     async renameChatPrompt(chatId) {
@@ -84,7 +100,7 @@ class AIStudioApp {
         await this.saveChat(chat);
     }
 
-    addMessageToChat(text, sender='user') {
+    addMessageToChat(text, sender = 'user') {
         const chat = this.chats.find(c => c.id === this.currentChatId);
         if (!chat) return;
         const message = { text, sender, createdAt: new Date() };
@@ -92,11 +108,11 @@ class AIStudioApp {
         this.renderMessages(chat.messages);
         this.saveChat(chat);
 
-        if(sender==='user') this.getAIResponse(text); // appeler Gemini
+        if (sender === 'user') this.getAIResponse(text);
     }
 
     async getAIResponse(userText) {
-        if(!this.apiKey) {
+        if (!this.apiKey) {
             this.addMessageToChat("Erreur : Clé Gemini manquante", 'ai');
             return;
         }
@@ -104,25 +120,24 @@ class AIStudioApp {
             const response = await this.callGeminiAPI(userText);
             const aiText = response?.contents?.[0]?.parts?.[0]?.text || "Erreur : pas de réponse";
             this.addMessageToChat(aiText, 'ai');
-        } catch(e) {
+        } catch (e) {
             console.error(e);
             this.addMessageToChat("Erreur lors de l'appel à l'IA", 'ai');
         }
     }
 
-    // ===== Gemini API =====
-    async callGeminiAPI(prompt, model='gemini-pro') {
+    async callGeminiAPI(prompt, model = 'gemini-pro') {
         const url = `https://api.gemini.com/v1/models/${model}:generateContent?key=${this.apiKey}`;
         const res = await fetch(url, {
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ contents:[{ parts:[{ text: prompt }] }] })
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
         });
-        if(!res.ok) throw new Error("Erreur API Gemini");
+        if (!res.ok) throw new Error("Erreur API Gemini");
         return await res.json();
     }
 
-    // ===== UI =====
+    // ================== UI ==================
     openChat(chatId) {
         const chat = this.chats.find(c => c.id === chatId);
         if (!chat) return;
@@ -133,10 +148,11 @@ class AIStudioApp {
 
     renderMessages(messages) {
         const container = document.getElementById('messages-container');
+        if (!container) return;
         container.innerHTML = '';
         messages.forEach(m => {
             const div = document.createElement('div');
-            div.className = 'message-bubble ' + (m.sender==='user'?'message-user':'message-ai');
+            div.className = 'message-bubble ' + (m.sender === 'user' ? 'message-user' : 'message-ai');
             div.textContent = m.text;
             container.appendChild(div);
         });
@@ -145,8 +161,9 @@ class AIStudioApp {
 
     renderChatList() {
         const container = document.getElementById('chat-list');
+        if (!container) return;
         container.innerHTML = '';
-        this.chats.filter(c=>!c.archived).forEach(chat=>{
+        this.chats.filter(c => !c.archived).forEach(chat => {
             const div = document.createElement('div');
             div.className = 'chat-item flex justify-between items-center';
             div.innerHTML = `<span>${chat.title}</span>
@@ -155,15 +172,16 @@ class AIStudioApp {
                     <button onclick="app.renameChatPrompt('${chat.id}')">✏️</button>
                     <button onclick="app.deleteChat('${chat.id}')">❌</button>
                 </div>`;
-            div.addEventListener('click',()=>this.openChat(chat.id));
+            div.addEventListener('click', () => this.openChat(chat.id));
             container.appendChild(div);
         });
     }
 
     renderArchivedList() {
         const container = document.getElementById('archived-list');
+        if (!container) return;
         container.innerHTML = '';
-        this.chats.filter(c=>c.archived).forEach(chat=>{
+        this.chats.filter(c => c.archived).forEach(chat => {
             const div = document.createElement('div');
             div.className = 'archived-chat flex justify-between items-center';
             div.innerHTML = `<span>${chat.title}</span>
@@ -171,55 +189,56 @@ class AIStudioApp {
                     <button onclick="app.renameChatPrompt('${chat.id}')">✏️</button>
                     <button onclick="app.deleteChat('${chat.id}')">❌</button>
                 </div>`;
-            div.addEventListener('click',()=>this.openChat(chat.id));
+            div.addEventListener('click', () => this.openChat(chat.id));
             container.appendChild(div);
         });
     }
 
     async loadChats() {
         const saved = localStorage.getItem('chats');
-        if(saved) this.chats = JSON.parse(saved);
+        if (saved) this.chats = JSON.parse(saved);
         this.renderChatList();
         this.renderArchivedList();
-        if(this.chats.length) this.openChat(this.chats[0].id);
+        if (this.chats.length) this.openChat(this.chats[0].id);
     }
 
     showTab(tab) {
-        ['chat','image','video'].forEach(t=>{
-            const el = document.getElementById('tab-'+t);
-            el.classList.toggle('hidden', t!==tab);
-            document.querySelectorAll('.tab-btn').forEach(btn=>{
-                btn.classList.toggle('active', btn.textContent.toLowerCase()===tab);
+        ['chat', 'image', 'video'].forEach(t => {
+            const el = document.getElementById('tab-' + t);
+            if (!el) return;
+            el.classList.toggle('hidden', t !== tab);
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.toLowerCase() === tab);
             });
         });
     }
 
-    setupThemeToggle() {
-        const btn = document.getElementById('theme-toggle');
-        btn.addEventListener('click',()=>{
-            document.body.classList.toggle('theme-dark');
-            document.body.classList.toggle('theme-light');
+    setupEventListeners() {
+        document.getElementById('new-chat-btn')?.addEventListener('click', () => this.createNewChat());
+        document.getElementById('send-btn')?.addEventListener('click', () => {
+            const input = document.getElementById('message-text');
+            if (input.value.trim() !== '') {
+                this.addMessageToChat(input.value.trim());
+                input.value = '';
+            }
+        });
+        document.getElementById('message-text')?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const input = e.target;
+                if (input.value.trim() !== '') {
+                    this.addMessageToChat(input.value.trim());
+                    input.value = '';
+                }
+            }
         });
     }
 
-    setupSendMessage() {
-        const input = document.getElementById('message-text');
-        const btn = document.getElementById('send-btn');
-        btn.addEventListener('click',()=>{
-            if(input.value.trim()!=='') {
-                this.addMessageToChat(input.value.trim());
-                input.value = '';
-            }
-        });
-        input.addEventListener('keypress',(e)=>{
-            if(e.key==='Enter' && input.value.trim()!=='') {
-                this.addMessageToChat(input.value.trim());
-                input.value = '';
-            }
-        });
+    initChatSystem() {
+        this.loadChats();
     }
 }
 
+// Initialisation
 document.addEventListener('DOMContentLoaded', () => {
     window.app = new AIStudioApp();
 });
