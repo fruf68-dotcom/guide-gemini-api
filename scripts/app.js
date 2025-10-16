@@ -103,26 +103,33 @@ class AIStudioApp {
     }
 
     async createNewChat() {
-        try {
-            const chatId = 'chat_' + Date.now();
-            const newChat = {
-                id: chatId,
-                title: 'Nouveau chat ' + (this.chats.length + 1),
-                createdAt: new Date(),
-                messages: []
-            };
-            
-            this.chats.unshift(newChat);
-            this.currentChatId = chatId;
-            await this.saveChatToFirestore(newChat);
-            this.renderChatList();
-            this.showChatInterface();
-            
-            console.log("Nouveau chat créé:", chatId);
-        } catch (error) {
-            console.error("Erreur création chat:", error);
-        }
-    }
+		try {
+			console.log("Tentative de création d'un chat...");
+			
+			// Vérifier que Firebase est prêt
+			if (!db) {
+				console.error("Firebase Firestore n'est pas initialisé");
+				return;
+			}
+			
+			const chatId = 'chat_' + Date.now();
+			const newChat = {
+				id: chatId,
+				title: 'Nouveau chat ' + (this.chats.length + 1),
+				createdAt: new Date(),
+				messages: []
+			};
+			
+			this.chats.unshift(newChat);
+			this.currentChatId = chatId;
+			await this.saveChatToFirestore(newChat);
+			this.renderChatList();
+			
+			console.log("Nouveau chat créé avec succès:", chatId);
+		} catch (error) {
+			console.error("Erreur création chat:", error);
+		}
+	}
 
     async saveChatToFirestore(chat) {
         if (!db) {
