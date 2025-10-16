@@ -2,7 +2,7 @@
 class AIStudioApp {
   constructor() {
     this.apiKey = this.getApiKey();
-    setTimeout(() => this.initChatSystem(), 1000);
+    this.initChatSystem();
     this.init();
   }
 
@@ -30,13 +30,13 @@ class AIStudioApp {
   }
 
   setupEventListeners() {
-    // Nouveau chat
     const newChatBtn = document.getElementById('new-chat-btn');
     if (newChatBtn) {
       newChatBtn.addEventListener('click', () => this.createNewChat());
+    } else {
+      console.error("Bouton 'new-chat-btn' non trouvé dans le DOM.");
     }
 
-    // Autres outils éventuels
     document.getElementById('start-creating')?.addEventListener('click', () => {
       this.openTool('image');
     });
@@ -67,7 +67,6 @@ class AIStudioApp {
     }
   }
 
-  // === GESTION DES CHATS ===
   initChatSystem() {
     console.log("🗂️ Initialisation du système de chats...");
     this.currentChatId = null;
@@ -148,18 +147,27 @@ class AIStudioApp {
   }
 
   renderChatList() {
-    const sidebar = document.getElementById('chat-list');
-    if (!sidebar) return;
-    sidebar.innerHTML = this.chats
+    const sidebar = document.getElementById('chat-sidebar');
+    if (!sidebar) {
+      console.error("Élément 'chat-sidebar' non trouvé dans le DOM.");
+      return;
+    }
+    const existingButton = sidebar.querySelector('#new-chat-btn');
+    sidebar.innerHTML = '';
+    if (existingButton) {
+      sidebar.appendChild(existingButton);
+    }
+    const chatList = document.createElement('div');
+    chatList.innerHTML = this.chats
       .map(chat => `
         <div class="chat-item p-2 mb-2 rounded-lg cursor-pointer bg-gray-800 hover:bg-gray-700 transition">
           ${chat.title}
         </div>`)
       .join('');
+    sidebar.appendChild(chatList);
   }
 }
 
-// Initialisation
 document.addEventListener('DOMContentLoaded', () => {
   window.app = new AIStudioApp();
 });
