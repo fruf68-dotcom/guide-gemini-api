@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Guide d'Installation Gemini API</title>
+    <title>Mon assistant IA personnel</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -22,11 +22,44 @@
       }
     </script>
     <link rel="stylesheet" href="/index.css">
+	<style>
+	.sidebar {
+		min-height: 100vh;
+		overflow-y: auto;
+	}
+	.chat-item {
+		transition: background-color 0.2s;
+	}
+	.chat-item:hover {
+		background-color: rgba(255, 255, 255, 0.1);
+	}
+	.main-content {
+		background-color: #121212;
+	}
+	</style>
 </head>
 <body class="bg-brand-bg text-brand-text-primary">
-    <div id="root"></div>
-    
-    <!-- TES SCRIPTS ICI, À LA FIN DU BODY -->
+    <!-- NOUVELLE STRUCTURE AVEC SIDEBAR -->
+    <div class="app-container flex h-screen">
+        <!-- Sidebar Historique -->
+        <div class="sidebar w-64 bg-gray-900 p-4 border-r border-gray-700" id="chat-sidebar">
+            <button class="new-chat-btn w-full bg-brand-primary text-white p-3 rounded-lg mb-4 hover:bg-purple-700 transition" 
+                    onclick="app.createNewChat()">
+                + Nouveau Chat
+            </button>
+            <!-- Liste des chats apparaît ici dynamiquement -->
+        </div>
+        
+        <!-- Contenu principal existant -->
+        <div class="main-content flex-1 overflow-auto">
+            <div id="root">
+                <!-- TON CONTENU EXISTANT RESTE ICI -->
+                <!-- Hero section, tools-grid, etc. -->
+            </div>
+        </div>
+    </div>
+
+    <!-- TES SCRIPTS EXISTANTS -->
     <script src="scripts/config.js"></script>
     <script src="scripts/app.js"></script>
     
