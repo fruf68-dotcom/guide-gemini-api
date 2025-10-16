@@ -2,19 +2,53 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Styles personnalisés pour les bulles messages et sidebar */
-.chat-item {
-  @apply p-2 rounded-lg flex justify-between items-center cursor-pointer transition;
+/* Thèmes */
+.theme-dark {
+    --bg: #121212;
+    --surface: #1e1e1e;
+    --text-primary: #E0E0E0;
+    --text-secondary: #B0B0B0;
+    --user-msg: #4A90E2;
+    --ai-msg: #333333;
 }
-.chat-item:hover {
-  @apply bg-gray-800;
+.theme-light {
+    --bg: #f4f4f4;
+    --surface: #ffffff;
+    --text-primary: #222222;
+    --text-secondary: #555555;
+    --user-msg: #4A90E2;
+    --ai-msg: #cccccc;
 }
-.chat-menu {
-  @apply hidden space-x-1;
-}
-.chat-item:hover .chat-menu {
-  @apply flex;
-}
+body.theme-dark { background-color: var(--bg); color: var(--text-primary); }
+body.theme-light { background-color: var(--bg); color: var(--text-primary); }
+
+.main-content { background-color: var(--surface); }
+.sidebar { background-color: var(--surface); }
+
+/* Messages */
 .message-bubble {
-  @apply p-2 rounded bg-gray-700 text-white;
+    padding: 0.75rem; border-radius: 1.5rem; max-width: 70%; word-break: break-word;
+    transition: all 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
+.message-user { background-color: var(--user-msg); color: white; margin-left: auto; }
+.message-ai { background-color: var(--ai-msg); color: white; margin-right: auto; }
+.message-appear { opacity: 0; transform: translateY(2px); animation: appear 0.3s forwards; }
+@keyframes appear { to { opacity:1; transform: translateY(0); } }
+
+/* Sidebar chats */
+.chat-item, .archived-chat {
+    padding: 0.75rem; border-radius: 0.75rem; display:flex; justify-content:space-between; align-items:center; cursor:pointer; transition: 0.2s;
+}
+.chat-item:hover, .archived-chat:hover { background-color: gray; color:white; }
+.chat-menu { display:none; gap:0.25rem; }
+.chat-item:hover .chat-menu { display:flex; }
+.chat-menu button { font-size:0.75rem; background:gray; width:1.5rem; height:1.5rem; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+
+/* Input */
+#chat-input input { flex:1; padding:0.5rem; border-radius:0.5rem; background-color:#555; color:white; outline:none; }
+#chat-input input:focus { outline:none; box-shadow:0 0 0 2px #8A2BE2; }
+#chat-input button { background-color:#8A2BE2; padding:0.5rem; border-radius:0.5rem; color:white; transition:0.2s; }
+#chat-input button:hover { background-color:#7a24cc; }
+
+/* Scroll smooth */
+#messages-container { scroll-behavior: smooth; }
