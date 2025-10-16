@@ -1,81 +1,104 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mon assistant IA personnel</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mon assistant IA personnel</title>
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              'brand-bg': '#121212',
-              'brand-surface': '#1e1e1e',
-              'brand-primary': '#8A2BE2',
-              'brand-secondary': '#4A90E2',
-              'brand-text-primary': '#E0E0E0',
-              'brand-text-secondary': '#B0B0B0',
-            },
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'brand-bg': '#121212',
+            'brand-surface': '#1e1e1e',
+            'brand-primary': '#8A2BE2',
+            'brand-secondary': '#4A90E2',
+            'brand-text-primary': '#E0E0E0',
+            'brand-text-secondary': '#B0B0B0',
           },
         },
-      }
-    </script>
+      },
+    }
+  </script>
 
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-    
-    <script>
-      // Configuration Firebase
-      const firebaseConfig = {
-        apiKey: "AIzaSyD4s4c0SITIPAitWJrUaCl9JhAHpqzOkSU",
-        authDomain: "ai-studio-chat-9068c.firebaseapp.com",
-        projectId: "ai-studio-chat-9068c",
-        storageBucket: "ai-studio-chat-9068c.firebasestorage.app",
-        messagingSenderId: "920017576337",
-        appId: "1:920017576337:web:1e54116fa99b4a464e7a30"
-      };
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
 
-      // Initialisation Firebase
-      const firebaseAppInstance = firebase.initializeApp(firebaseConfig);
-      window.db = firebase.firestore();
-      window.auth = firebase.auth();
-      console.log("✅ Firebase initialisé !");
-    </script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyD4s4c0SITIPAitWJrUaCl9JhAHpqzOkSU",
+      authDomain: "ai-studio-chat-9068c.firebaseapp.com",
+      projectId: "ai-studio-chat-9068c",
+      storageBucket: "ai-studio-chat-9068c.firebasestorage.app",
+      messagingSenderId: "920017576337",
+      appId: "1:920017576337:web:1e54116fa99b4a464e7a30"
+    };
 
-    <link rel="stylesheet" href="/index.css">
+    const firebaseAppInstance = firebase.initializeApp(firebaseConfig);
+    window.db = firebase.firestore();
+    window.auth = firebase.auth();
+    console.log("✅ Firebase initialisé !");
+  </script>
 
-    <style>
-      .sidebar { min-height: 100vh; overflow-y: auto; }
-      .chat-item { transition: background-color 0.2s; }
-      .chat-item:hover { background-color: rgba(255, 255, 255, 0.1); }
-      .main-content { background-color: #121212; }
-    </style>
+  <link rel="stylesheet" href="/index.css">
+
+  <style>
+    .sidebar { min-height: 100vh; overflow-y: auto; }
+    .chat-item { transition: background-color 0.2s; }
+    .chat-item:hover { background-color: rgba(255, 255, 255, 0.1); }
+    .main-content { background-color: #121212; }
+  </style>
 </head>
 
 <body class="bg-brand-bg text-brand-text-primary">
   <div class="app-container flex h-screen">
-    <!-- Sidebar Historique -->
+    <!-- 🗂️ Sidebar Historique -->
     <div class="sidebar w-64 bg-gray-900 p-4 border-r border-gray-700" id="chat-sidebar">
       <button id="new-chat-btn"
               class="w-full bg-brand-primary text-white p-3 rounded-lg mb-4 hover:bg-purple-700 transition">
         + Nouveau Chat
       </button>
-      <!-- Liste des chats -->
       <div id="chat-list"></div>
     </div>
 
-    <!-- Contenu principal -->
+    <!-- 💬 Contenu principal -->
     <div class="main-content flex-1 overflow-auto">
-      <div id="root"></div>
+      <div id="root" class="p-6">
+        <!-- 🔹 Remettez ici votre contenu existant : cartes, outils, ou page d’accueil -->
+        <h1 class="text-3xl font-bold text-brand-primary mb-4">Bienvenue dans votre assistant IA personnel</h1>
+        <p class="text-brand-text-secondary mb-6">
+          Choisissez un outil ou créez un nouveau chat pour démarrer votre session.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="tool-card bg-brand-surface p-4 rounded-xl hover:bg-brand-primary/10 transition" data-tool="chat">
+            <h2 class="text-xl font-semibold mb-2">💬 Chat IA</h2>
+            <p class="text-brand-text-secondary mb-3">Discutez avec votre assistant intelligent en temps réel.</p>
+            <button class="bg-brand-primary text-white px-3 py-2 rounded-lg hover:bg-purple-700">Ouvrir</button>
+          </div>
+
+          <div class="tool-card bg-brand-surface p-4 rounded-xl hover:bg-brand-primary/10 transition" data-tool="image">
+            <h2 class="text-xl font-semibold mb-2">🎨 Génération d’images</h2>
+            <p class="text-brand-text-secondary mb-3">Créez des images avec un simple prompt.</p>
+            <button class="bg-brand-primary text-white px-3 py-2 rounded-lg hover:bg-purple-700">Commencer</button>
+          </div>
+
+          <div class="tool-card bg-brand-surface p-4 rounded-xl hover:bg-brand-primary/10 transition" data-tool="document">
+            <h2 class="text-xl font-semibold mb-2">📄 Génération de documents</h2>
+            <p class="text-brand-text-secondary mb-3">Rédigez ou améliorez vos textes automatiquement.</p>
+            <button class="bg-brand-primary text-white px-3 py-2 rounded-lg hover:bg-purple-700">Ouvrir</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Scripts placés à la fin pour éviter les erreurs de chargement -->
+  <!-- Scripts à la fin pour éviter tout problème de chargement -->
   <script src="scripts/config.js"></script>
   <script src="scripts/app.js"></script>
 </body>
