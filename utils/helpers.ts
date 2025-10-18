@@ -1,4 +1,3 @@
---- START OF FILE utils/helpers.ts ---
 // --- helper pour convertir un fichier en base64 ---
 export const fileToBase64 = (file: File): Promise<string> => new Promise((resolve, reject) => {
     const reader = new FileReader();

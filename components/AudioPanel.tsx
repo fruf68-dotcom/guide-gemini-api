@@ -1,4 +1,3 @@
---- START OF FILE components/AudioPanel.tsx ---
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI, Modality } from '@google/genai';
 import { fileToBase64, decode, addWavHeader } from '../utils/helpers';
