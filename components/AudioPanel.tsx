@@ -94,7 +94,7 @@ const AudioPanel = () => {
                 const pcmData = decode(base64Audio);
                 const wavData = addWavHeader(pcmData, 24000, 1, 16); // 24kHz, 1 channel, 16-bit
                 // CORRECTION : utiliser wavData.buffer au lieu de wavData
-                const audioBlob = new Blob([wavData.buffer], { type: 'audio/wav' });
+                const audioBlob = new Blob([new Uint8Array(wavData.buffer)], { type: 'audio/wav' });
                 const url = URL.createObjectURL(audioBlob);
                 const audio = new Audio(url);
                 audio.play();
@@ -141,7 +141,7 @@ const AudioPanel = () => {
                 const pcmData = decode(base64Audio);
                 const wavData = addWavHeader(pcmData, 24000, 1, 16);
                 // CORRECTION : utiliser wavData.buffer au lieu de wavData
-                const audioBlob = new Blob([wavData.buffer], { type: 'audio/wav' });
+                const audioBlob = new Blob([new Uint8Array(wavData.buffer)], { type: 'audio/wav' });
                 const url = URL.createObjectURL(audioBlob);
                 setTtsAudioUrl(url);
             } else {
