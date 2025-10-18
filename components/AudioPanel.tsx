@@ -1,3 +1,4 @@
+--- START OF FILE components/AudioPanel.tsx ---
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI, Modality } from '@google/genai';
 import { fileToBase64, decode, addWavHeader } from '../utils/helpers';
@@ -66,8 +67,8 @@ const AudioPanel = () => {
             const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
             if (base64Audio) {
                 const pcmData = decode(base64Audio);
-                const wavData = addWavHeader(pcmData, 24000, 1, 16);
-                const audioBlob = new Blob([wavData], { type: 'audio/wav' });
+                const wavDataBuffer = addWavHeader(pcmData, 24000, 1, 16);
+                const audioBlob = new Blob([wavDataBuffer], { type: 'audio/wav' });
                 const url = URL.createObjectURL(audioBlob);
                 const audio = new Audio(url);
                 audio.play();
@@ -91,8 +92,8 @@ const AudioPanel = () => {
             const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
             if (base64Audio) {
                 const pcmData = decode(base64Audio);
-                const wavData = addWavHeader(pcmData, 24000, 1, 16);
-                const audioBlob = new Blob([wavData], { type: 'audio/wav' });
+                const wavDataBuffer = addWavHeader(pcmData, 24000, 1, 16);
+                const audioBlob = new Blob([wavDataBuffer], { type: 'audio/wav' });
                 const url = URL.createObjectURL(audioBlob);
                 setTtsAudioUrl(url);
             } else { throw new Error("Aucun audio n'a été généré."); }

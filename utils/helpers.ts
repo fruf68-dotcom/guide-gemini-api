@@ -1,3 +1,4 @@
+--- START OF FILE utils/helpers.ts ---
 // --- helper pour convertir un fichier en base64 ---
 export const fileToBase64 = (file: File): Promise<string> => new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -46,7 +47,7 @@ function writeString(view: DataView, offset: number, string: string) {
     }
 }
 
-export function addWavHeader(pcmData: Uint8Array, sampleRate: number, numChannels: number, bitsPerSample: number): Uint8Array {
+export function addWavHeader(pcmData: Uint8Array, sampleRate: number, numChannels: number, bitsPerSample: number): ArrayBuffer {
     const dataSize = pcmData.length;
     const buffer = new ArrayBuffer(44 + dataSize);
     const view = new DataView(buffer);
@@ -76,5 +77,5 @@ export function addWavHeader(pcmData: Uint8Array, sampleRate: number, numChannel
     const wavBytes = new Uint8Array(buffer);
     wavBytes.set(pcmData, 44);
 
-    return wavBytes;
+    return buffer;
 }
