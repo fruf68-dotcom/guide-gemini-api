@@ -1,6 +1,7 @@
-import * as firebase from "firebase/app";
+import * as firebaseApp from "firebase/app";
 import { getFirestore } from 'firebase/firestore';
 
+// Configuration de votre projet Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyD4s4c0SITIPAitWJrUaCl9JhAHpqzOkSU",
   authDomain: "ai-studio-chat-9068c.firebaseapp.com",
@@ -10,6 +11,7 @@ const firebaseConfig = {
   appId: "1:920017576337:web:1e54116fa99b4a464e7a30"
 };
 
-// Fix: Changed import to handle module resolution issues with `initializeApp`.
-const app = firebase.initializeApp(firebaseConfig);
+// Initialise Firebase en utilisant la syntaxe modulaire standard (v9+)
+// Fix: Use a namespace import for 'firebase/app' to resolve the "no exported member 'initializeApp'" error.
+const app = firebaseApp.initializeApp(firebaseConfig);
 export const db = getFirestore(app);

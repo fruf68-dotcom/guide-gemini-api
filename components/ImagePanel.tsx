@@ -36,21 +36,48 @@ const ImagePanel = () => {
         try {
             const currentAi = new GoogleGenAI({ apiKey: process.env.API_KEY! });
             if (isEditing && baseImage.base64 && baseImage.file) {
-                const response = await currentAi.models.generateContent({ model: 'gemini-2.5-flash-image', contents: { parts: [{ inlineData: { data: baseImage.base64, mimeType: baseImage.file.type } }, { text: prompt },] }, config: { responseModalities: [Modality.IMAGE] } });
+                const imagePart = {
+                    inlineData: {
+                        data: baseImage.base64,
+                        mimeType: baseImage.file.type,
+                    },
+                };
+                const textPart = { text: prompt };
+                const response = await currentAi.models.generateContent({
+                    model: 'gemini-2.5-flash-image',
+                    contents: { parts: [imagePart, textPart] },
+                    config: { responseModalities: [Modality.IMAGE] }
+                });
                 const imageData = response.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
-                if (imageData) setGeneratedImages([`data:image/png;base64,${imageData}`]); else throw new Error("Aucune image n'a été retournée.");
+                if (imageData) {
+                    setGeneratedImages([`data:image/png;base64,${imageData}`]);
+                } else {
+                    throw new Error("Aucune image n'a été retournée.");
+                }
             } else {
-                const response = await currentAi.models.generateImages({ model: 'imagen-4.0-generate-001', prompt: prompt, config: { numberOfImages: numImages, outputMimeType: 'image/jpeg', aspectRatio: aspectRatio, } });
+                const response = await currentAi.models.generateImages({
+                    model: 'imagen-4.0-generate-001',
+                    prompt: prompt,
+                    config: {
+                        numberOfImages: numImages,
+                        outputMimeType: 'image/jpeg',
+                        aspectRatio: aspectRatio,
+                    }
+                });
                 if (response.generatedImages) {
                     const images = response.generatedImages
-                        .map(img => img.image?.imageBytes ? `data:image/jpeg;base64,${img.image.imageBytes}` : null)
+                        .map(img => img.image?.imageBytes ? `data:image/jpeg;base64,${img.image?.imageBytes}` : null)
                         .filter((item): item is string => item !== null);
                     setGeneratedImages(images);
                 } else {
                     setGeneratedImages([]);
                 }
             }
-        } catch(e) { setError((e as Error).message || "Une erreur est survenue."); } finally { setLoading(false); }
+        } catch(e) {
+            setError((e as Error).message || "Une erreur est survenue.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
