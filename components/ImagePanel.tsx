@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { GoogleGenAI, Modality } from "@google/genai";
 import { fileToBase64 } from '../utils/helpers';
 
 const ImagePanel = () => {
@@ -37,45 +36,35 @@ const ImagePanel = () => {
 
         setLoading(true); setError(null); setGeneratedImages([]);
         try {
-            const currentAi = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+            const payload: any = {
+                prompt,
+                mode,
+                numImages,
+                aspectRatio
+            };
+
             if (mode === 'edit' && baseImage.base64 && baseImage.file) {
-                const imagePart = {
-                    inlineData: {
-                        data: baseImage.base64,
-                        mimeType: baseImage.file.type,
-                    },
+                payload.baseImage = {
+                    base64: baseImage.base64,
+                    mimeType: baseImage.file.type
                 };
-                const textPart = { text: prompt };
-                const response = await currentAi.models.generateContent({
-                    model: 'gemini-2.5-flash-image',
-                    contents: { parts: [imagePart, textPart] },
-                    config: { responseModalities: [Modality.IMAGE] }
-                });
-                const imageData = response.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
-                if (imageData) {
-                    setGeneratedImages([`data:image/png;base64,${imageData}`]);
-                } else {
-                    throw new Error("Aucune image n'a été retournée.");
-                }
-            } else {
-                const response = await currentAi.models.generateImages({
-                    model: 'imagen-4.0-generate-001',
-                    prompt: prompt,
-                    config: {
-                        numberOfImages: numImages,
-                        outputMimeType: 'image/jpeg',
-                        aspectRatio: aspectRatio,
-                    }
-                });
-                if (response.generatedImages) {
-                    const images = response.generatedImages
-                        .map(img => img.image?.imageBytes ? `data:image/jpeg;base64,${img.image.imageBytes}` : null)
-                        .filter((item): item is string => item !== null);
-                    setGeneratedImages(images);
-                } else {
-                    setGeneratedImages([]);
-                }
             }
+
+            // On appelle notre propre API Route sur Vercel
+            const response = await fetch('/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Une erreur est survenue');
+            }
+
+            setGeneratedImages(data.images || []);
+
         } catch(e) {
             setError((e as Error).message || "Une erreur est survenue.");
         } finally {

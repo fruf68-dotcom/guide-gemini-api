@@ -54,7 +54,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePanel, setActivePanel, chatHist
 
     return (
         <aside className="sidebar">
-            <h1 className="sidebar-title">Gemini Studio</h1>
+            <h1 className="sidebar-title">Fabrice Studio</h1>
             <nav className="sidebar-nav">
                 <NavLink panel="video" icon={<VideoIcon />} label="Vidéo" />
                 <NavLink panel="image" icon={<ImageIcon />} label="Image" />
