@@ -73,7 +73,20 @@ const ImagePanel = () => {
                         aspectRatio: aspectRatio 
                     } 
                 });
-                setGeneratedImages(response.generatedImages.map(img => `data:image/jpeg;base64,${img.image.imageBytes}`));
+                
+                // CORRECTION : Vérification que les données existent
+                if (response.generatedImages && response.generatedImages.length > 0) {
+                    const images = response.generatedImages.map(img => {
+                        if (img.image?.imageBytes) {
+                            return `data:image/jpeg;base64,${img.image.imageBytes}`;
+                        }
+                        return '';
+                    }).filter(img => img !== '');
+                    
+                    setGeneratedImages(images);
+                } else {
+                    throw new Error("Aucune image n'a été générée.");
+                }
             }
         } catch(e) { 
             setError((e as Error).message || "Une erreur est survenue."); 
