@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { decode, addWavHeader, fileToBase64 } from '../utils/helpers';
-import { VOICES, Voice } from '../utils/voices';
+import { VOICES, Voice } from '../utils/voices.ts';
 
 // Ce panneau appelle maintenant /api/generateAudio et /api/transcribe
 const AudioPanel = () => {
@@ -173,7 +173,7 @@ const AudioPanel = () => {
                             {['Féminines', 'Masculins'].map(genderGroup => (
                                 <React.Fragment key={genderGroup}>
                                     <div className="custom-select-header">{genderGroup}</div>
-                                    {VOICES.filter(v => v.gender === genderGroup.slice(0, -1)).map(voice => (
+                                    {VOICES.filter((v: Voice) => v.gender === genderGroup.slice(0, -1)).map((voice: Voice) => (
                                          <div key={voice.apiName} className={`custom-select-option ${selectedVoice.apiName === voice.apiName ? 'active' : ''}`} onClick={() => selectVoice(voice)}>
                                            <span>{voice.name}</span>
                                            <button className="voice-preview-button" onClick={(e) => handlePreviewVoice(e, voice)} disabled={!!previewLoading}>

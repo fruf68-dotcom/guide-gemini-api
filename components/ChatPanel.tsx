@@ -161,7 +161,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ chatId }) => {
                     disabled={loading}
                 />
                 <button type="submit" className="button button-primary send-button" disabled={loading || !input.trim()}>
-                    <svg xmlns="http://www.w.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M3.105 3.105a1.5 1.5 0 011.995-.29l12 6a1.5 1.5 0 010 2.77l-12 6A1.5 1.5 0 013 16.5v-12a1.5 1.5 0 01.105-.795z" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M3.105 3.105a1.5 1.5 0 011.995-.29l12 6a1.5 1.5 0 010 2.77l-12 6A1.5 1.5 0 013 16.5v-12a1.5 1.5 0 01.105-.795z" /></svg>
                 </button>
             </form>
         </div>

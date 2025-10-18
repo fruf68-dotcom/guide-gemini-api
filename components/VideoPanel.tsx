@@ -2,6 +2,19 @@ import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI } from '@google/genai';
 import { fileToBase64 } from '../utils/helpers';
 
+// Fix: Define an interface for window.aistudio to resolve the TypeScript error
+// and provide strong typing.
+interface AIStudio {
+    openSelectKey: () => Promise<void>;
+    hasSelectedApiKey: () => Promise<boolean>;
+}
+
+declare global {
+    interface Window {
+        aistudio?: AIStudio;
+    }
+}
+
 // Ce panneau appelle maintenant /api/generateVideo
 const VideoPanel = () => {
     const [prompt, setPrompt] = useState('Un chaton mignon jouant avec une pelote de laine, style cinématique.');
@@ -17,10 +30,18 @@ const VideoPanel = () => {
     const isMounted = useRef(true);
     useEffect(() => {
         isMounted.current = true;
-        // Vérifie si la clé publique est disponible, sinon on assume que l'utilisateur doit en sélectionner une.
-        if (import.meta.env.VITE_GEMINI_API_KEY) {
-            setApiKeySelected(true);
-        }
+        // Fix: Check for API key using window.aistudio as per guidelines, with a fallback to env vars.
+        const checkApiKey = async () => {
+            if (window.aistudio?.hasSelectedApiKey) {
+                const hasKey = await window.aistudio.hasSelectedApiKey();
+                if (isMounted.current) {
+                    setApiKeySelected(hasKey);
+                }
+            } else if (import.meta.env.VITE_GEMINI_API_KEY) {
+                setApiKeySelected(true);
+            }
+        };
+        checkApiKey();
         return () => { isMounted.current = false; };
     }, []);
 
@@ -112,7 +133,14 @@ const VideoPanel = () => {
 
         } catch (e: any) {
             console.error(e);
-            setError((e as Error).message || "Une erreur est survenue.");
+            // Fix: Handle API key errors specifically, prompting the user to re-select a key.
+            const errorMessage = (e as Error).message || "Une erreur est survenue.";
+            if (errorMessage.includes("Requested entity was not found")) {
+                setError("La clé API sélectionnée semble invalide. Veuillez en sélectionner une nouvelle.");
+                setApiKeySelected(false);
+            } else {
+                setError(errorMessage);
+            }
         } finally {
             if (isMounted.current) {
                 setLoading(false);

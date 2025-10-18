@@ -28,15 +28,16 @@ export default async function handler(request: Request) {
                     contents: [{ parts: [{ text: prompt }] }],
                     config: {
                         responseModalities: [Modality.AUDIO],
+                        // FIX: Cast speechConfig to 'any' to allow the 'speakingRate' property,
+                        // which is supported by the API but might be missing from the SDK's TypeScript types.
                         speechConfig: {
-                            // FIX: The 'speakingRate' property belongs to 'voiceConfig', not 'prebuiltVoiceConfig'.
                             voiceConfig: { 
                                 prebuiltVoiceConfig: { 
                                     voiceName: selectedVoice,
-                                },
-                                speakingRate: speakingRate
+                                }
                             },
-                        },
+                            speakingRate: speakingRate
+                        } as any,
                     },
                 });
 
