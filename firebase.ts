@@ -1,4 +1,4 @@
-import * as firebaseApp from "firebase/app";
+import { initializeApp } from "firebase/app";
 import { getFirestore } from 'firebase/firestore';
 
 // Configuration de votre projet Firebase
@@ -12,6 +12,5 @@ const firebaseConfig = {
 };
 
 // Initialise Firebase en utilisant la syntaxe modulaire standard (v9+)
-// Fix: Use a namespace import for 'firebase/app' to resolve the "no exported member 'initializeApp'" error.
-const app = firebaseApp.initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
