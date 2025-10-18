@@ -67,7 +67,7 @@ const AudioPanel = () => {
             if (base64Audio) {
                 const pcmData = decode(base64Audio);
                 const wavData = addWavHeader(pcmData, 24000, 1, 16);
-                const audioBlob = new Blob([wavData.buffer], { type: 'audio/wav' });
+                const audioBlob = new Blob([wavData], { type: 'audio/wav' });
                 const url = URL.createObjectURL(audioBlob);
                 const audio = new Audio(url);
                 audio.play();
@@ -92,7 +92,7 @@ const AudioPanel = () => {
             if (base64Audio) {
                 const pcmData = decode(base64Audio);
                 const wavData = addWavHeader(pcmData, 24000, 1, 16);
-                const audioBlob = new Blob([wavData.buffer], { type: 'audio/wav' });
+                const audioBlob = new Blob([wavData], { type: 'audio/wav' });
                 const url = URL.createObjectURL(audioBlob);
                 setTtsAudioUrl(url);
             } else { throw new Error("Aucun audio n'a été généré."); }
