@@ -92,7 +92,7 @@ const ImagePanel = () => {
                 <div className="form-group"><label className="form-label">Format d'image</label><select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value)} className="select"><option value="1:1">1:1 (Carré)</option><option value="16:9">16:9 (Paysage)</option><option value="9:16">9:16 (Portrait)</option><option value="4:3">4:3</option><option value="3:4">3:4</option></select></div>
                 <div className="form-group"><label className="form-label">Nombre d'images</label><input type="number" min={1} max={4} value={numImages} onChange={(e) => setNumImages(Number(e.target.value) || 1)} className="input"/></div>
             </div>)}
-            <button className="button button-primary" onClick={handleGenerate} disabled={loading}>{loading ? 'Génération...' : (isEditing ? 'Éditer l'image' : 'Générer l\'image')}</button>
+            <button className="button button-primary" onClick={handleGenerate} disabled={loading}>{loading ? "Génération..." : (isEditing ? "Éditer l'image" : "Générer l'image")}</button>
             {error && <div className="alert-error">{error}</div>}
             {generatedImages.length > 0 && (<div className="image-results-grid">{generatedImages.map((imgSrc, index) => <img key={index} src={imgSrc} alt={`Generated ${index + 1}`}/>)}</div>)}
         </div>
