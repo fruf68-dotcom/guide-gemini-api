@@ -3,6 +3,7 @@ import { GoogleGenAI, Modality } from '@google/genai';
 import { fileToBase64, decode, addWavHeader } from '../utils/helpers';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { withApiKeyRotation } from '../utils/apiKeyManager';
 
 // @ts-ignore
 const AudioContext: any = window.AudioContext || window.webkitAudioContext;
@@ -58,10 +59,12 @@ const AudioPanel = () => {
         setPreviewLoadingVoice(voiceId);
         setTtsError(null);
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
-            const response = await ai.models.generateContent({
-                model: "gemini-2.5-flash-preview-tts", contents: [{ parts: [{ text: "Voici un aperçu de ma voix." }] }],
-                config: { responseModalities: [Modality.AUDIO], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceId } } } }
+            const response = await withApiKeyRotation(apiKey => {
+                const ai = new GoogleGenAI({ apiKey });
+                return ai.models.generateContent({
+                    model: "gemini-2.5-flash-preview-tts", contents: [{ parts: [{ text: "Voici un aperçu de ma voix." }] }],
+                    config: { responseModalities: [Modality.AUDIO], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceId } } } }
+                });
             });
             const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
             if (base64Audio) {
@@ -81,13 +84,16 @@ const AudioPanel = () => {
         if (!ttsPrompt) { setTtsError("Veuillez entrer un texte à vocaliser."); return; }
         setTtsLoading(true); setTtsError(null); setTtsAudioUrl(null);
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
-            const response = await ai.models.generateContent({
-                model: "gemini-2.5-flash-preview-tts", contents: [{ parts: [{ text: ttsPrompt }] }],
-                config: { responseModalities: [Modality.AUDIO], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: ttsVoice } }, 
-                // @ts-ignore
-                speakingRate: speakingRate } }
+            const response = await withApiKeyRotation(apiKey => {
+                const ai = new GoogleGenAI({ apiKey });
+                return ai.models.generateContent({
+                    model: "gemini-2.5-flash-preview-tts", contents: [{ parts: [{ text: ttsPrompt }] }],
+                    config: { responseModalities: [Modality.AUDIO], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: ttsVoice } }, 
+                    // @ts-ignore
+                    speakingRate: speakingRate } }
+                });
             });
+
             const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
             if (base64Audio) {
                 const pcmData = decode(base64Audio);
@@ -119,15 +125,14 @@ const AudioPanel = () => {
             const cleanedLine = line.trim();
             if (!cleanedLine || cleanedLine === '---') continue;
 
-            // Regex pour trouver "Intervenant X:" ou "**Intervenant X:**" etc.
             const speakerMatch = cleanedLine.match(/^(\*\*Intervenant\s+\d+:\*\*|\*?\*?Intervenant\s+\d+:)/i);
 
             if (speakerMatch) {
                 const currentSpeaker = speakerMatch[1].replace(/[:*]/g, '').trim();
                 
                 let dialogue = cleanedLine.substring(speakerMatch[0].length).trim();
-                dialogue = dialogue.replace(/\[\s*\d{2}:\d{2}(:\d{3})?\s*\]/g, '').trim(); // Enlève les horodatages
-                dialogue = dialogue.replace(/^[\s*]*/, ''); // Enlève les astérisques de début
+                dialogue = dialogue.replace(/\[\s*\d{2}:\d{2}(:\d{3})?\s*\]/g, '').trim();
+                dialogue = dialogue.replace(/^[\s*]*/, '');
                 
                 if (currentSpeaker !== lastSpeaker) {
                     if (formattedLines.length > 0) formattedLines.push('');
@@ -145,14 +150,17 @@ const AudioPanel = () => {
         if (!selectedFile) { setTranscriptionError("Veuillez sélectionner un fichier."); return; }
         setTranscribing(true); setTranscriptionError(null); setTranscriptionResult(null);
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
             const base64Data = await fileToBase64(selectedFile);
-            const filePart = { inlineData: { data: base64Data, mimeType: selectedFile.type } };
-            const promptText = enableDiarization 
-                ? "Transcris ce fichier audio en identifiant et en étiquetant chaque intervenant distinct (par exemple, Intervenant 1, Intervenant 2, etc.)." 
-                : "Transcris le contenu de ce fichier audio en français.";
-            const textPart = { text: promptText };
-            const response = await ai.models.generateContent({ model: 'gemini-2.5-pro', contents: { parts: [filePart, textPart] } });
+            
+            const response = await withApiKeyRotation(async (apiKey) => {
+                const ai = new GoogleGenAI({ apiKey });
+                const filePart = { inlineData: { data: base64Data, mimeType: selectedFile.type } };
+                const promptText = enableDiarization 
+                    ? "Transcris ce fichier audio en identifiant et en étiquetant chaque intervenant distinct (par exemple, Intervenant 1, Intervenant 2, etc.)." 
+                    : "Transcris le contenu de ce fichier audio en français.";
+                const textPart = { text: promptText };
+                return ai.models.generateContent({ model: 'gemini-2.5-pro', contents: { parts: [filePart, textPart] } });
+            });
             
             const rawResult = response.text;
             if (rawResult) {

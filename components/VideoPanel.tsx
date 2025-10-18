@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { GoogleGenAI, VideoGenerationReferenceType } from "@google/genai";
 import { fileToBase64 } from '../utils/helpers';
+import { withApiKeyRotation } from '../utils/apiKeyManager';
 
 const VideoPanel = () => {
     const [prompt, setPrompt] = useState('');
@@ -23,13 +24,6 @@ const VideoPanel = () => {
         'animation-loop': { prompt: 'Une animation en boucle de formes géométriques abstraites.', aspectRatio: '1:1', resolution: '720p', description: 'Crée une séquence conçue pour se répéter de manière transparente.' },
     };
 
-    useEffect(() => {
-        if (refImages.length > 0) {
-            setAspectRatio('16:9');
-            setResolution('720p');
-        }
-    }, [refImages]);
-
     const handlePresetChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedPreset = e.target.value;
         const settings = videoPresets[selectedPreset];
@@ -51,12 +45,13 @@ const VideoPanel = () => {
     const handleRefImagesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []).slice(0, 3 - refImages.length);
         if (files.length > 0) {
-            // Fix: Explicitly type 'file' as File to prevent type inference issues.
             const newImages = await Promise.all(files.map(async (file: File) => ({
                 file,
                 base64: await fileToBase64(file)
             })));
             setRefImages(prev => [...prev, ...newImages]);
+            setAspectRatio('16:9');
+            setResolution('720p');
         }
     };
 
@@ -64,7 +59,6 @@ const VideoPanel = () => {
         setRefImages(prev => prev.filter((_, i) => i !== index));
     };
 
-    // Fix: Refactored video generation logic to align with API guidelines for different modes (standard, reference images, extension).
     const generateVideo = async (extendVideo: any = null) => {
         if ((extendVideo || refImages.length > 0) && !prompt) {
             setError('Une invite est requise pour cette opération.');
@@ -77,67 +71,70 @@ const VideoPanel = () => {
         setLoading(true);
         setError(null);
         setVideoUrl(null);
+        
         try {
-            // @ts-ignore
-            if (!await window.aistudio.hasSelectedApiKey()) {
-                // @ts-ignore
-                await window.aistudio.openSelectKey();
-            }
-            const currentAi = new GoogleGenAI({ apiKey: process.env.API_KEY! });
-            const isRefVideo = refImages.length > 0;
-            
-            const modelName = (isRefVideo || extendVideo) ? 'veo-3.1-generate-preview' : 'veo-3.1-fast-generate-preview';
-            let finalResolution = resolution;
-            let finalAspectRatio = aspectRatio;
+            const { blob, operation: finalOperation } = await withApiKeyRotation(async (apiKey) => {
+                const currentAi = new GoogleGenAI({ apiKey });
+                const isRefVideo = refImages.length > 0;
+                
+                const modelName = (isRefVideo || extendVideo) ? 'veo-3.1-generate-preview' : 'veo-3.1-fast-generate-preview';
+                let finalResolution = resolution;
+                let finalAspectRatio = aspectRatio;
 
-            if (extendVideo) {
-                const previousVideo = lastOperation.response?.generatedVideos?.[0]?.video;
-                if (previousVideo?.resolution !== '720p') {
-                    setError("Seules les vidéos en 720p peuvent être étendues.");
-                    setLoading(false);
-                    return;
+                if (extendVideo) {
+                    const previousVideo = lastOperation.response?.generatedVideos?.[0]?.video;
+                    if (previousVideo?.resolution !== '720p') {
+                        throw new Error("Seules les vidéos en 720p peuvent être étendues.");
+                    }
+                    finalResolution = '720p';
+                    finalAspectRatio = previousVideo.aspectRatio || aspectRatio;
                 }
-                finalResolution = '720p';
-                finalAspectRatio = previousVideo.aspectRatio || aspectRatio;
-            }
-            
-            let payload: any = { 
-                model: modelName, 
-                prompt, 
-                config: { 
-                    numberOfVideos: 1, 
-                    resolution: finalResolution, 
-                    aspectRatio: finalAspectRatio 
-                } 
-            };
+                
+                let payload: any = { 
+                    model: modelName, 
+                    prompt, 
+                    config: { 
+                        numberOfVideos: 1, 
+                        resolution: finalResolution, 
+                        aspectRatio: finalAspectRatio 
+                    } 
+                };
 
-            if (extendVideo) {
-                payload.video = extendVideo;
-            } else if (isRefVideo) {
-                payload.config.referenceImages = refImages.map(img => ({ image: { imageBytes: img.base64, mimeType: img.file.type }, referenceType: VideoGenerationReferenceType.ASSET }));
-            } else {
-                if (startImage.base64 && startImage.file) payload.image = { imageBytes: startImage.base64, mimeType: startImage.file.type };
-                if (endImage.base64 && endImage.file) payload.config.lastFrame = { imageBytes: endImage.base64, mimeType: endImage.file.type };
-            }
-            let operation = await currentAi.models.generateVideos(payload);
-            setLastOperation(operation);
-            while (!operation.done) {
-                await new Promise(resolve => setTimeout(resolve, 5000));
-                operation = await currentAi.operations.getVideosOperation({ operation });
+                if (extendVideo) {
+                    payload.video = extendVideo;
+                } else if (isRefVideo) {
+                    payload.config.referenceImages = refImages.map(img => ({ image: { imageBytes: img.base64, mimeType: img.file.type }, referenceType: VideoGenerationReferenceType.ASSET }));
+                } else {
+                    if (startImage.base64 && startImage.file) payload.image = { imageBytes: startImage.base64, mimeType: startImage.file.type };
+                    if (endImage.base64 && endImage.file) payload.config.lastFrame = { imageBytes: endImage.base64, mimeType: endImage.file.type };
+                }
+                
+                let operation = await currentAi.models.generateVideos(payload);
                 setLastOperation(operation);
-            }
-            if (operation.error) throw new Error(String(operation.error.message));
-            const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
-            if (downloadLink) {
-                const response = await fetch(`${downloadLink}&key=${process.env.API_KEY}`);
-                const blob = await response.blob();
-                setVideoUrl(URL.createObjectURL(blob));
-            } else {
-                throw new Error("La génération de la vidéo a échoué.");
-            }
+                
+                while (!operation.done) {
+                    await new Promise(resolve => setTimeout(resolve, 5000));
+                    operation = await currentAi.operations.getVideosOperation({ operation });
+                    setLastOperation(operation);
+                }
+                
+                if (operation.error) throw new Error(String(operation.error.message));
+                
+                const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
+                if (downloadLink) {
+                    const response = await fetch(`${downloadLink}&key=${apiKey}`);
+                    const blob = await response.blob();
+                    return { blob, operation };
+                } else {
+                    throw new Error("La génération de la vidéo a échoué.");
+                }
+            });
+            
+            setVideoUrl(URL.createObjectURL(blob));
+            setLastOperation(finalOperation);
+
         } catch (e: any) {
-            const message = (e as Error).message || 'Une erreur inconnue est survenue.';
-            setError(message.includes("was not found") ? "Clé API non valide. Veuillez en sélectionner une." : message);
+            setError((e as Error).message || 'Une erreur inconnue est survenue.');
             setLastOperation(null);
         } finally {
             setLoading(false);

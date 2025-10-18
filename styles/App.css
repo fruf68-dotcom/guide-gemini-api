@@ -446,8 +446,8 @@ body {
 }
 
 /* --- Panneau Image & Vidéo --- */
-.video-result, .image-results-grid { margin-top: 1.5rem; }
-.video-result video, .image-results-grid img {
+.video-result { margin-top: 1.5rem; }
+.video-result video {
   width: 100%;
   border-radius: var(--border-radius);
   display: block;
@@ -461,7 +461,56 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
+  margin-top: 1.5rem;
 }
+.image-result-item {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background-color: var(--bg-tertiary);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-color);
+}
+.image-result-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.skeleton-loader {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-hover) 50%, var(--bg-tertiary) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite linear;
+}
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.error-placeholder {
+  padding: 1rem;
+  text-align: center;
+  color: var(--error-color);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+}
+.error-placeholder p {
+  font-weight: bold;
+  margin: 0;
+}
+.error-placeholder span {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  max-width: 90%;
+}
+
 .ref-images-preview { display: flex; gap: 1rem; margin-top: 1rem; }
 .ref-image-item { position: relative; }
 .ref-image-item img { width: 80px; height: 80px; object-fit: cover; border-radius: var(--border-radius); }
@@ -514,6 +563,40 @@ body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   box-shadow: var(--shadow-sm);
+}
+.image-result-item:hover .image-actions {
+    opacity: 1;
+    transform: translateY(0);
+}
+.image-actions {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+    padding: 1rem 0.5rem 0.5rem 0.5rem;
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    opacity: 0;
+    transform: translateY(100%);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.image-actions button {
+    background-color: rgba(42, 42, 42, 0.8);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 0.3rem 0.8rem;
+    font-size: 0.8rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+.image-actions button:hover {
+    background-color: var(--accent-color);
+    color: white;
+    border-color: var(--accent-hover);
 }
 
 /* --- Panneau Audio --- */
@@ -788,4 +871,84 @@ body {
 }
 .transcription-output p:last-child {
     margin-bottom: 0;
+}
+
+.image-result-item.has-image {
+    cursor: zoom-in;
+}
+
+/* --- Lightbox / Visionneuse d'Image --- */
+.lightbox-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.lightbox-content {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  cursor: default;
+  animation: zoomIn 0.3s ease;
+  display: flex;
+}
+
+@keyframes zoomIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.lightbox-image {
+  display: block;
+  max-width: 100%;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: var(--border-radius);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+.lightbox-close-button {
+  position: absolute;
+  top: -15px;
+  right: -15px;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 2rem;
+  font-weight: 300;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 4px;
+  transition: background-color 0.2s, transform 0.2s;
+  box-shadow: var(--shadow-md);
+  z-index: 1001;
+}
+
+.lightbox-close-button:hover {
+  background-color: var(--error-color);
+  color: white;
+  transform: scale(1.1);
+  border-color: var(--error-color);
 }
