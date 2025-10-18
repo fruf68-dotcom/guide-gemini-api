@@ -102,11 +102,26 @@ const ImagePanel = () => {
                     });
                 });
 
-                const successResults: ImageResult[] = response.generatedImages.map((img, i) => ({
-                    id: i,
-                    src: `data:image/jpeg;base64,${img.image.imageBytes}`,
-                    status: 'success',
-                }));
+                if (!response.generatedImages || response.generatedImages.length === 0) {
+                    throw new Error("L'API n'a retourné aucune image.");
+                }
+
+                const successResults: ImageResult[] = response.generatedImages.map((img, i) => {
+                    const imageBytes = img?.image?.imageBytes;
+                    if (imageBytes) {
+                        return {
+                            id: i,
+                            src: `data:image/jpeg;base64,${imageBytes}`,
+                            status: 'success' as const,
+                        };
+                    }
+                    return {
+                        id: i,
+                        src: null,
+                        status: 'error' as const,
+                        error: "Données d'image manquantes dans la réponse.",
+                    };
+                });
                 setImageResults(successResults);
 
             } else { // mode === 'edit'
