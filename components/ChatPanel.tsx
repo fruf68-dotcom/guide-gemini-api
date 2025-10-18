@@ -78,7 +78,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ chatId }) => {
 
         setLoading(true);
         try {
-            const result = await chat.sendMessage(userInput);
+            // Fix: Pass an object with a `message` property to `chat.sendMessage`.
+            const result = await chat.sendMessage({ message: userInput });
             const response = result;
 
             await addDoc(collection(db, 'chats', chatId, 'messages'), {
