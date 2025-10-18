@@ -1,5 +1,4 @@
-// Fix: Use namespace import for firebase/app to resolve module export issue.
-import * as firebase from 'firebase/app';
+import * as firebase from "firebase/app";
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -11,5 +10,6 @@ const firebaseConfig = {
   appId: "1:920017576337:web:1e54116fa99b4a464e7a30"
 };
 
+// Fix: Changed import to handle module resolution issues with `initializeApp`.
 const app = firebase.initializeApp(firebaseConfig);
 export const db = getFirestore(app);

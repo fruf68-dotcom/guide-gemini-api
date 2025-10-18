@@ -64,9 +64,14 @@ const VideoPanel = () => {
         setRefImages(prev => prev.filter((_, i) => i !== index));
     };
 
+    // Fix: Refactored video generation logic to align with API guidelines for different modes (standard, reference images, extension).
     const generateVideo = async (extendVideo: any = null) => {
-        if (!prompt && !extendVideo && refImages.length === 0) {
-            setError('Veuillez entrer une invite.');
+        if ((extendVideo || refImages.length > 0) && !prompt) {
+            setError('Une invite est requise pour cette opération.');
+            return;
+        }
+        if (!prompt && !startImage.file && !extendVideo && refImages.length === 0) {
+            setError('Veuillez entrer une invite ou une image de début.');
             return;
         }
         setLoading(true);
@@ -80,8 +85,32 @@ const VideoPanel = () => {
             }
             const currentAi = new GoogleGenAI({ apiKey: process.env.API_KEY! });
             const isRefVideo = refImages.length > 0;
-            const modelName = isRefVideo ? 'veo-3.1-generate-preview' : 'veo-3.1-fast-generate-preview';
-            let payload: any = { model: modelName, prompt, config: { numberOfVideos: 1, resolution: resolution, aspectRatio: aspectRatio } };
+            
+            const modelName = (isRefVideo || extendVideo) ? 'veo-3.1-generate-preview' : 'veo-3.1-fast-generate-preview';
+            let finalResolution = resolution;
+            let finalAspectRatio = aspectRatio;
+
+            if (extendVideo) {
+                const previousVideo = lastOperation.response?.generatedVideos?.[0]?.video;
+                if (previousVideo?.resolution !== '720p') {
+                    setError("Seules les vidéos en 720p peuvent être étendues.");
+                    setLoading(false);
+                    return;
+                }
+                finalResolution = '720p';
+                finalAspectRatio = previousVideo.aspectRatio || aspectRatio;
+            }
+            
+            let payload: any = { 
+                model: modelName, 
+                prompt, 
+                config: { 
+                    numberOfVideos: 1, 
+                    resolution: finalResolution, 
+                    aspectRatio: finalAspectRatio 
+                } 
+            };
+
             if (extendVideo) {
                 payload.video = extendVideo;
             } else if (isRefVideo) {

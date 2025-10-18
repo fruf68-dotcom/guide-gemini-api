@@ -1,102 +1,147 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { collection, query, onSnapshot, orderBy, addDoc, serverTimestamp, doc, getDocs, updateDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 import { GoogleGenAI, Chat } from "@google/genai";
-import { collection, addDoc, serverTimestamp, query, onSnapshot, orderBy } from 'firebase/firestore';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { db } from '../firebase';
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
 
 interface ChatPanelProps {
     chatId: string | null;
 }
 
+interface Message {
+    id: string;
+    text: string;
+    sender: 'user' | 'model';
+    timestamp: any;
+}
+
 const ChatPanel: React.FC<ChatPanelProps> = ({ chatId }) => {
-    const [messages, setMessages] = useState<any[]>([]);
+    const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
-    const chatRef = useRef<Chat | null>(null);
+    const [chat, setChat] = useState<Chat | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const [currentModelResponse, setCurrentModelResponse] = useState('');
 
     useEffect(() => {
-        if (!chatId) return;
+        const initializeChat = async () => {
+            if (chatId) {
+                const messagesRef = collection(db, 'chats', chatId, 'messages');
+                const q = query(messagesRef, orderBy('timestamp'));
+                const initialSnapshot = await getDocs(q);
+                const initialMessages = initialSnapshot.docs.map(doc => doc.data() as Omit<Message, 'id'>);
 
-        setMessages([]);
-        setCurrentModelResponse('');
-
-        const q = query(collection(db, 'chats', chatId, 'messages'), orderBy('timestamp'));
-        const unsubscribe = onSnapshot(q, (querySnapshot) => {
-            const msgs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setMessages(msgs);
-        });
-
-        chatRef.current = ai.chats.create({ model: 'gemini-2.5-flash' });
-        
-        return () => unsubscribe();
+                const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+                const chatSession = ai.chats.create({
+                    model: 'gemini-2.5-flash',
+                    history: initialMessages.map(msg => ({
+                        role: msg.sender === 'user' ? 'user' : 'model',
+                        parts: [{ text: msg.text }]
+                    }))
+                });
+                setChat(chatSession);
+            }
+        };
+        initializeChat();
     }, [chatId]);
 
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages, currentModelResponse]);
+        if (chatId) {
+            const q = query(collection(db, 'chats', chatId, 'messages'), orderBy('timestamp'));
+            const unsubscribe = onSnapshot(q, (snapshot) => {
+                const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
+                setMessages(msgs);
+            });
+            return unsubscribe;
+        } else {
+            setMessages([]);
+        }
+    }, [chatId]);
 
-    const sendMessage = async (e: React.FormEvent) => {
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
+
+    const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!input.trim() || !chatId || loading) return;
+        if (!input.trim() || !chatId || loading || !chat) return;
 
-        const userMessageContent = input;
-        const userMessage = { role: 'user', content: userMessageContent, timestamp: serverTimestamp() };
-        
+        const isFirstMessage = messages.length === 0;
+        const userInput = input;
         setInput('');
-        setLoading(true);
-        
-        await addDoc(collection(db, 'chats', chatId, 'messages'), userMessage);
-        
-        try {
-            if (!chatRef.current) throw new Error("Chat not initialized");
-            const stream = await chatRef.current.sendMessageStream({ message: userMessageContent });
-            let accumulatedResponse = '';
-            
-            for await (const chunk of stream) {
-                accumulatedResponse += chunk.text;
-                setCurrentModelResponse(accumulatedResponse + '...');
-            }
-            
-            await addDoc(collection(db, 'chats', chatId, 'messages'), { role: 'model', content: accumulatedResponse, timestamp: serverTimestamp() });
 
+        await addDoc(collection(db, 'chats', chatId, 'messages'), {
+            text: userInput,
+            sender: 'user',
+            timestamp: serverTimestamp(),
+        });
+
+        setLoading(true);
+        try {
+            const result = await chat.sendMessage(userInput);
+            const response = result;
+
+            await addDoc(collection(db, 'chats', chatId, 'messages'), {
+                text: response.text,
+                sender: 'model',
+                timestamp: serverTimestamp(),
+            });
+
+            if (isFirstMessage) {
+                const titleAi = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+                const titleResponse = await titleAi.models.generateContent({
+                    model: 'gemini-2.5-flash',
+                    contents: `Generate a short, concise title (4 words max) for this user prompt: "${userInput}"`
+                });
+                const newTitle = titleResponse.text.replace(/"/g, '').trim();
+                if (newTitle) {
+                    await updateDoc(doc(db, 'chats', chatId), { title: newTitle });
+                }
+            }
         } catch (error) {
-            console.error(error);
-            const errorMessage = "Désolé, une erreur est survenue.";
-            await addDoc(collection(db, 'chats', chatId, 'messages'), { role: 'model', content: errorMessage, timestamp: serverTimestamp() });
+            console.error("Error sending message to Gemini: ", error);
+            await addDoc(collection(db, 'chats', chatId, 'messages'), {
+                text: "Désolé, une erreur est survenue. Veuillez réessayer.",
+                sender: 'model',
+                timestamp: serverTimestamp(),
+            });
         } finally {
-            setCurrentModelResponse('');
             setLoading(false);
         }
     };
-    
-    if (!chatId) return <div className="placeholder-text">Sélectionnez ou créez une nouvelle discussion pour commencer.</div>
+
+    if (!chatId) {
+        return <div className="placeholder-text">Sélectionnez une discussion ou commencez-en une nouvelle.</div>;
+    }
 
     return (
         <div className="chat-panel">
             <div className="chat-messages">
                 <div className="chat-messages-inner">
-                    {messages.map((msg, index) => (
-                        <div key={index} className={`chat-message ${msg.role}`}>
-                           <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                    {messages.map(msg => (
+                        <div key={msg.id} className={`chat-message ${msg.sender}`}>
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.text}</ReactMarkdown>
                         </div>
                     ))}
-                    {currentModelResponse && (
-                         <div className="chat-message model">
-                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{currentModelResponse}</ReactMarkdown>
-                         </div>
+                    {loading && messages[messages.length - 1]?.sender === 'user' && (
+                        <div className="chat-message model">...</div>
                     )}
-                     <div ref={messagesEndRef} />
+                    <div ref={messagesEndRef} />
                 </div>
             </div>
             <div className="chat-input-area">
-                <form onSubmit={sendMessage} className="chat-input-form">
-                    <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Envoyer un message..." className="input" disabled={loading}/>
-                    <button type="submit" disabled={loading || !input.trim()} className="button button-primary">Envoyer</button>
+                <form onSubmit={handleSendMessage} className="chat-input-form">
+                    <input
+                        type="text"
+                        className="input"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder="Envoyer un message..."
+                        disabled={loading}
+                    />
+                    <button type="submit" className="button button-primary" disabled={loading || !input.trim()}>
+                        {loading ? '...' : 'Envoyer'}
+                    </button>
                 </form>
             </div>
         </div>

@@ -12,7 +12,8 @@ const AudioPanel = () => {
     const audioContexts = useRef<{input: AudioContext | null, output: AudioContext | null, sources: Set<AudioBufferSourceNode>}>({ input: null, output: null, sources: new Set() });
     const streamRef = useRef<MediaStream | null>(null);
     const processorRef = useRef<ScriptProcessorNode | null>(null);
-    let nextStartTime = 0;
+    // Fix: Use useRef to persist nextStartTime across renders for gapless audio playback.
+    const nextStartTime = useRef(0);
 
     const startConversation = async () => {
         try {
@@ -52,13 +53,20 @@ const AudioPanel = () => {
                         processorRef.current.connect(inputAudioContext.destination);
                     },
                     onmessage: async (message) => {
-                        if (message.serverContent?.outputTranscription?.text) { setTranscripts(prev => [...prev, { source: 'modèle', text: message.serverContent.outputTranscription.text }]); }
-                        if (message.serverContent?.inputTranscription?.text) { setTranscripts(prev => [...prev, { source: 'vous', text: message.serverContent.inputTranscription.text }]); }
-                        if (message.serverContent?.modelTurn?.parts[0]?.inlineData.data) {
+                        const outputText = message.serverContent?.outputTranscription?.text;
+                        if (outputText) {
+                            setTranscripts(prev => [...prev, { source: 'modèle', text: outputText }]);
+                        }
+                        const inputText = message.serverContent?.inputTranscription?.text;
+                        if (inputText) {
+                            setTranscripts(prev => [...prev, { source: 'vous', text: inputText }]);
+                        }
+
+                        const b64 = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
+                        if (b64) {
                             setStatus({ text: 'En train de parler...', color: 'green' });
-                            const b64 = message.serverContent.modelTurn.parts[0].inlineData.data;
                             if (!outputAudioContext) return;
-                            nextStartTime = Math.max(nextStartTime, outputAudioContext.currentTime);
+                            nextStartTime.current = Math.max(nextStartTime.current, outputAudioContext.currentTime);
                             const audioBuffer = await decodeAudioData(decode(b64), outputAudioContext, 24000, 1);
                             const sourceNode = outputAudioContext.createBufferSource();
                             sourceNode.buffer = audioBuffer;
@@ -67,9 +75,9 @@ const AudioPanel = () => {
                                 audioContexts.current.sources?.delete(sourceNode);
                                 if (audioContexts.current.sources?.size === 0) setStatus({ text: 'Connecté. En écoute...', color: 'red' });
                             });
-                            sourceNode.start(nextStartTime);
-                            nextStartTime += audioBuffer.duration;
-                             audioContexts.current.sources?.add(sourceNode);
+                            sourceNode.start(nextStartTime.current);
+                            nextStartTime.current += audioBuffer.duration;
+                            audioContexts.current.sources?.add(sourceNode);
                         }
                     },
                     onerror: () => setStatus({ text: 'Erreur', color: 'red' }),
