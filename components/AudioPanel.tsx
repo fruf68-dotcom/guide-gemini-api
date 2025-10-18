@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { GoogleGenAI, Modality } from "@google/genai";
 import { encode, decode, decodeAudioData } from '../utils/helpers';
 

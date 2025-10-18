@@ -78,12 +78,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ chatId }) => {
 
         setLoading(true);
         try {
-            // Fix: Pass an object with a `message` property to `chat.sendMessage`.
             const result = await chat.sendMessage({ message: userInput });
-            const response = result;
 
             await addDoc(collection(db, 'chats', chatId, 'messages'), {
-                text: response.text,
+                text: result.text ?? "Désolé, une réponse n'a pas pu être générée.",
                 sender: 'model',
                 timestamp: serverTimestamp(),
             });
@@ -94,7 +92,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ chatId }) => {
                     model: 'gemini-2.5-flash',
                     contents: `Generate a short, concise title (4 words max) for this user prompt: "${userInput}"`
                 });
-                const newTitle = titleResponse.text.replace(/"/g, '').trim();
+                const newTitle = titleResponse.text?.replace(/"/g, '').trim();
                 if (newTitle) {
                     await updateDoc(doc(db, 'chats', chatId), { title: newTitle });
                 }
