@@ -5,6 +5,20 @@ import { GoogleGenAI, Chat } from "@google/genai";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
+// @ts-ignore
+// Fix: Explicitly type SpeechRecognition as 'any' to resolve construct signature error.
+const SpeechRecognition: any = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+// --- SVG Icons ---
+const MicIcon = ({ isListening }: { isListening: boolean }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={isListening ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+        <line x1="12" y1="19" x2="12" y2="22"></line>
+    </svg>
+);
+
+
 interface ChatPanelProps {
     chatId: string | null;
 }
@@ -20,8 +34,42 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ chatId }) => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
+    const [isListening, setIsListening] = useState(false);
     const [chat, setChat] = useState<Chat | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const recognitionRef = useRef<any>(null);
+
+
+    useEffect(() => {
+        if (SpeechRecognition) {
+            recognitionRef.current = new SpeechRecognition();
+            recognitionRef.current.continuous = false;
+            recognitionRef.current.lang = 'fr-FR';
+            recognitionRef.current.interimResults = false;
+
+            recognitionRef.current.onstart = () => setIsListening(true);
+            recognitionRef.current.onend = () => setIsListening(false);
+            recognitionRef.current.onerror = (event: any) => {
+                console.error('Speech recognition error:', event.error);
+                setIsListening(false);
+            };
+            recognitionRef.current.onresult = (event: any) => {
+                const transcript = event.results[0][0].transcript;
+                setInput(transcript);
+            };
+        }
+    }, []);
+
+    const handleToggleListening = () => {
+        if (!recognitionRef.current) return;
+        if (isListening) {
+            recognitionRef.current.stop();
+        } else {
+            setInput('');
+            recognitionRef.current.start();
+        }
+    };
+
 
     useEffect(() => {
         const initializeChat = async () => {
@@ -123,7 +171,11 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ chatId }) => {
                         </div>
                     ))}
                     {loading && messages[messages.length - 1]?.sender === 'user' && (
-                        <div className="chat-message model">...</div>
+                        <div className="chat-message model">
+                            <div className="typing-indicator">
+                                <span></span><span></span><span></span>
+                            </div>
+                        </div>
                     )}
                     <div ref={messagesEndRef} />
                 </div>
@@ -138,6 +190,11 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ chatId }) => {
                         placeholder="Envoyer un message..."
                         disabled={loading}
                     />
+                    {SpeechRecognition && (
+                         <button type="button" onClick={handleToggleListening} className={`button-icon ${isListening ? 'listening' : ''}`} title="Saisie vocale" disabled={loading}>
+                            <MicIcon isListening={isListening} />
+                        </button>
+                    )}
                     <button type="submit" className="button button-primary" disabled={loading || !input.trim()}>
                         {loading ? '...' : 'Envoyer'}
                     </button>
