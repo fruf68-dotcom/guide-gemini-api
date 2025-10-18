@@ -66,7 +66,7 @@ const ImagePanel = () => {
                 });
                 if (response.generatedImages) {
                     const images = response.generatedImages
-                        .map(img => img.image?.imageBytes ? `data:image/jpeg;base64,${img.image?.imageBytes}` : null)
+                        .map(img => img.image?.imageBytes ? `data:image/jpeg;base64,${img.image.imageBytes}` : null)
                         .filter((item): item is string => item !== null);
                     setGeneratedImages(images);
                 } else {
